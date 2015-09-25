@@ -231,11 +231,11 @@ void log_now(void) {
 		current.wind_direction_sector,
 		gps.latitude,
 		gps.longitude,
-		gprs.connect_state,
-		gprs.connect_retries,
-		gprs.connects_failed,
+		0, // gprs.connect_state,
+		0, //gprs.connect_retries,
+		0, //gprs.connects_failed,
 		current.uptime,
-		gprs.uptime
+		0 //gprs.uptime
 	);
 	
 	/* debugging */
@@ -251,14 +251,9 @@ void log_now(void) {
 	write_record(buff_binary);
 	/* write to SD card */
 	for ( i=0 ; i<strlen(buff_decimal) ; i++ ) {
-		if ( HARDWARE_TYPE_RDLOGGERCELL == current.hardware_type ) {
-			/* rdLoggerCell via external hardware UART */
-			uart_putc(buff_decimal[i]);
-		} else {
-			/* rdLogger via builtin UART2 (with misleading stream name) */
-			fputc(buff_decimal[i],stream_gprs);
-			delay_ms(1);
-		}
+		/* rdLogger via builtin UART2 (with misleading stream name) */
+		fputc(buff_decimal[i],stream_gprs);
+		delay_ms(1);
 	}
 
 }

@@ -19,9 +19,7 @@ typedef struct {
 	int8 hardware_type;
 } struct_current;
 
-#define GPRS_STATE_DISCONNECTED 0
-#define GPRS_STATE_READY        1
-#define GPRS_STATE_ERROR        2
+
 
 typedef struct {
 	int8  state;
@@ -129,7 +127,7 @@ typedef struct {
 
 /* global structures */
 struct_current current;
-struct_gprs gprs;
+//struct_gprs gprs;
 struct_wireless wireless;
 struct_action action;
 struct_time_keep timers;
@@ -167,11 +165,9 @@ int16 crc_chk(int8 *data, int8 length) {
 
 #include "interrupts.c"
 #include "wireless.c"
-#include "gprs.c"
 #include "lcd.c"
 #include "dataflash_at45db161d.c"
 #include "fram_fm24c512.c"
-#include "uart_sci16is740.c"
 #include "log.c"
 #include "adc.c"
 #include "rtc.c"
@@ -190,6 +186,8 @@ void write_eeprom_int16(int16 address, int16 val) {
 
 
 void basicInit() {
+	int8 buff[32];
+
 	setup_oscillator(OSC_8MHZ|OSC_INTRC);
 //	if ( HARDWARE_TYPE_RDLOGGERCELL == current.hardware_type )  {
 //		setup_adc_ports(AN0_TO_AN1 | VSS_VDD);
@@ -220,63 +218,44 @@ void basicInit() {
 	current.pulse_count=0;
 
 	/* get our compiled date from constant */
-	strcpy(gprs.buff,__DATE__);
-	current.compile_day =(gprs.buff[0]-'0')*10;
-	current.compile_day+=(gprs.buff[1]-'0');
+	strcpy(buff,__DATE__);
+	current.compile_day =(buff[0]-'0')*10;
+	current.compile_day+=(buff[1]-'0');
 	/* determine month ... how annoying */
-	if ( 'J'==gprs.buff[3] ) {
-		if ( 'A'==gprs.buff[4] )
+	if ( 'J'==buff[3] ) {
+		if ( 'A'==buff[4] )
 			current.compile_month=1;
-		else if ( 'N'==gprs.buff[5] )
+		else if ( 'N'==buff[5] )
 			current.compile_month=6;
 		else
 			current.compile_month=7;
-	} else if ( 'A'==gprs.buff[3] ) {
-		if ( 'P'==gprs.buff[4] )
+	} else if ( 'A'==buff[3] ) {
+		if ( 'P'==buff[4] )
 			current.compile_month=4;
 		else
 			current.compile_month=8;
-	} else if ( 'M'==gprs.buff[3] ) {
-		if ( 'R'==gprs.buff[5] )
+	} else if ( 'M'==buff[3] ) {
+		if ( 'R'==buff[5] )
 			current.compile_month=3;
 		else
 			current.compile_month=5;
-	} else if ( 'F'==gprs.buff[3] ) {
+	} else if ( 'F'==buff[3] ) {
 		current.compile_month=2;
-	} else if ( 'S'==gprs.buff[3] ) {
+	} else if ( 'S'==buff[3] ) {
 		current.compile_month=9;
-	} else if ( 'O'==gprs.buff[3] ) {
+	} else if ( 'O'==buff[3] ) {
 		current.compile_month=10;
-	} else if ( 'N'==gprs.buff[3] ) {
+	} else if ( 'N'==buff[3] ) {
 		current.compile_month=11;
-	} else if ( 'D'==gprs.buff[3] ) {
+	} else if ( 'D'==buff[3] ) {
 		current.compile_month=12;
 	} else {
 		/* error parsing, shouldn't happen */
 		current.compile_month=255;
 	}
-	current.compile_year =(gprs.buff[7]-'0')*10;
-	current.compile_year+=(gprs.buff[8]-'0');
+	current.compile_year =(buff[7]-'0')*10;
+	current.compile_year+=(buff[8]-'0');
 	current.uptime=0;
-
-	gprs.state=GPRS_STATE_DISCONNECTED;
-	gprs.connect_state=0;
-	gprs.connect_retries=0;
-	gprs.connects_failed=0;
-
-	gprs.now_generate_message=0;
-	gprs.uptime=0;
-	gprs.buff_length=0;
-	gprs.age=65535;
-	gprs.age_response=0;
-	gprs.message_waiting=0;
-	gprs.checksum_last_msb=0;
-	gprs.checksum_last_lsb=0;
-	gprs.checksum_rx_msb=0;
-	gprs.checksum_rx_lsb=0;
-	gprs.checksum_rx_used=1;
-	gprs.connection_open=0;
-	gprs.missed_acks=0;
 
 	wireless.now_generate_message=0;
 	wireless.buff_length=0;
@@ -329,15 +308,8 @@ void rdLoggerInit(void) {
 //		current.hardware_type=HARDWARE_TYPE_RDLOGGER;
 //		current.hardware_type=HARDWARE_TYPE_RDLOGGERUNIVERSAL;
 
-	if ( HARDWARE_TYPE_RDLOGGERCELL == current.hardware_type )  {
-		/* UART2 defaults with #use_rs232 to settings for GPRS modem */
-		gps_clear();
-		uart_init();	
-		output_high(GPRS_ON);
-	} else {
 		/* UART2 connects direct to mmcDaughter, so we need be at 9600 */
 		set_uart_speed(9600,stream_gprs);
-	}
 }
 
 void secondTasks(void) {
@@ -377,9 +349,6 @@ void secondTasks(void) {
 		action.now_log=1;
 		last_minute=timers.minute;
 
-		if ( GPRS_STATE_READY==gprs.state && gprs.uptime<65535 ) {
-			gprs.uptime++;
-		}
 
 		if ( current.uptime<65535 )
 			current.uptime++;
@@ -419,18 +388,15 @@ void startupCountdown() {
 	else if ( HARDWARE_TYPE_RDLOGGERUNIVERSAL == current.hardware_type ) 
 		printf(lcd_putch,"rdLoggerUniversal");
 	else
-		printf(lcd_putch,"rdLoggerCell(U)");	
+		printf(lcd_putch,"unknown!");	
 
 	serial=make16(read_eeprom(EE_SERIAL_MSB),read_eeprom(EE_SERIAL_LSB));
 
 	for ( i=10 ; i>0 ; i-- ) {
-		gprs.age_response=0;
 		lcd_goto(LCD_LINE_TWO);
 		printf(lcd_putch,"Up in %u ID=%c%lu ",i,read_eeprom(EE_SERIAL_PREFIX),serial);
 		fprintf(stream_wireless,"# UP IN %u SECONDS\r\n",i);
 
-		while ( gprs.age_response < 1000 )
-			restart_wdt();
 	}
 	
 
@@ -495,16 +461,6 @@ void main(void) {
 
 //		output_toggle(MMC_STATUS_TO_SD);
 
-		if ( HARDWARE_TYPE_RDLOGGERCELL == current.hardware_type ) {
-			/* GPRS related stuff */
-			if ( gprs.now_generate_message ) {
-				messageFromBuff();
-				gprs.now_generate_message=0;
-			}
-
-			gprsTick();
-		}
-
 		/* wireless 802.15.4 related stuff */
 		if ( wireless.now_generate_message ) {
 			wirelessMessageFromBuff();
@@ -546,22 +502,6 @@ void main(void) {
 			log_init();
 		}
 
-		if ( HARDWARE_TYPE_RDLOGGERCELL == current.hardware_type ) {
-			/* GPS */
-			if ( action.now_gps_update ) {
-				/* do we need to flush our FIFO to avoid getting stale data? */
-				output_high(GPS_EN);
-		
-				if ( uart_kbhit() ) {
-					gps_collect(uart_getc());
-					if ( gps.valid ) {
-						gps_action();
-					}
-				}
-			} else {
-				output_low(GPS_EN);
-			}
-		}
 	}
 }
 

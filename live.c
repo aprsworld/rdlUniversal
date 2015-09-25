@@ -22,12 +22,6 @@ CRC LSB         14 low byte of CRC
 
 //	output_high(WV1_FILTERED);
 
-	if ( 0==gprs.checksum_rx_used && gprs.checksum_rx_msb==gprs.checksum_last_msb && gprs.checksum_rx_lsb==gprs.checksum_last_lsb ) {
-		gprs.missed_acks=0;
-		gprs.checksum_rx_used=1;
-	} else if ( gprs.missed_acks < 255 ) {
-		gprs.missed_acks++;
-	}
 
 	buff[0]='#';
 	buff[1]=current.serial_prefix;
@@ -47,17 +41,10 @@ CRC LSB         14 low byte of CRC
 	buff[13]=make8(lCRC,1);
 	buff[14]=make8(lCRC,0);
 
-	/* copy over our last data checksum so we can wait for the ACK */
-	gprs.checksum_last_msb=buff[13];
-	gprs.checksum_last_lsb=buff[14];
 
 	for ( i=0 ; i<sizeof(buff) ; i++ ) {
 		/* xbee modem */
 		fputc(buff[i],stream_wireless);
-		if ( gprs.connection_open ) {
-			/* GPRS modem */
-			gprsSendCharCont(buff[i]);
-		}
 	}	
 
 	/* modem will automatically shut off when countdown done */
@@ -191,9 +178,9 @@ void live_send_status(void) {
 	buff[31]=p[3];
 
 	buff[32]=current.wind_direction_sector;
-	buff[33]=gprs.state;
-	buff[34]=make8(gprs.uptime,1);
-	buff[35]=make8(gprs.uptime,0);
+	buff[33]=0; // gprs.state;
+	buff[34]=0; // make8(gprs.uptime,1);
+	buff[35]=0; // make8(gprs.uptime,0);
 	buff[36]=current.compile_year;
 	/* low four bits is the compile month, high four bits is the high nibble of the modem on time */
 	buff[37]=(current.compile_month&0x0f) + (timers.modem_seconds&0xf0);
@@ -209,10 +196,6 @@ void live_send_status(void) {
 	for ( i=0 ; i<sizeof(buff) ; i++ ) {
 		/* xbee modem */
 		fputc(buff[i],stream_wireless);
-		if ( gprs.connection_open ) {
-			/* GPRS modem */
-			gprsSendCharCont(buff[i]);
-		}
 	}	
 
 	/* modem will automatically shut off when countdown done */

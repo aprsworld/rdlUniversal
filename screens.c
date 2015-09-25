@@ -4,39 +4,6 @@ void screen_download(void) {
 	printf(lcd_putch," N Pages:%05lu",log.n_pages);
 }
 
-void screen_missed_acks(void) {
-	printf(lcd_putch,"Missed Data ACKs");
-	lcd_goto(LCD_LINE_TWO);
-
-	printf(lcd_putch,"%u %02x%02x%02x %02x%02x%02x",
-		gprs.missed_acks,
-		'!',
-		gprs.checksum_rx_msb,
-		gprs.checksum_rx_lsb,
-		'!',
-		gprs.checksum_last_msb,
-		gprs.checksum_last_lsb
-	);
-
-	/* press select to zero the missed acks counter */
-	if ( action.select_now ) {
-		action.select_now=0;
-		gprs.missed_acks=0;
-	}
-}
-
-void screen_gprs_status(void) {
-	printf(lcd_putch,"GPRS: %u(%u/%u)",gprs.connect_state,gprs.connect_retries,gprs.connects_failed);
-	lcd_goto(LCD_LINE_TWO);
-	printf(lcd_putch,"  Up: %lu min",gprs.uptime);
-//                    0123456789012345
-	if ( action.select_now ) {
-		action.select_now=0;
-		gprs.state=GPRS_STATE_DISCONNECTED;
-		gprsConnect(1);
-	}
-}
-
 void screen_uptime(void) {
 	printf(lcd_putch,"Unit Uptime:");
 	lcd_goto(LCD_LINE_TWO);
@@ -255,12 +222,10 @@ void screen_set_serial(short reset) {
 		lcd_goto(LCD_LINE_ONE);
 		printf(lcd_putch," - HW TYPE - ");
 		lcd_goto(LCD_LINE_TWO);
-		printf(lcd_putch,"RDL   CELL  RDLU");
+		printf(lcd_putch,"RDL         RDLU");
 
 		if ( action.select_now ) {
 			action.select_now=0;
-			hwtype=HARDWARE_TYPE_RDLOGGERCELL;
-			break;
 		}
 
 		if ( action.up_now ) {
@@ -520,17 +485,14 @@ short screen_set_time(void) {
 }
 
 
-#define MAX_SCREEN_RDLOGGERCELL 14
+
 #define MAX_SCREEN_RDLOGGER     10
 void screen_select(void) {
 	static int8 screen;
 	static short has_buttons=0;
 	int8 max_screen;
 
-	if ( HARDWARE_TYPE_RDLOGGERCELL==current.hardware_type )
-		max_screen=MAX_SCREEN_RDLOGGERCELL;
-	else
-		max_screen=MAX_SCREEN_RDLOGGER;	
+	max_screen=MAX_SCREEN_RDLOGGER;	
 
 	if ( ! has_buttons && action.up_now ) {
 		action.up_now=0;
@@ -555,25 +517,6 @@ void screen_select(void) {
 	lcd_clear();
 
 
-	if ( HARDWARE_TYPE_RDLOGGERCELL == current.hardware_type ) {
-		switch ( screen ) {
-			case 0:  screen_wind(); has_buttons=0; break;
-			case 1:  screen_wind_direction(); has_buttons=0; break;
-			case 2:  screen_time_date(); has_buttons=0; break;
-			case 3:  screen_dataflash(); has_buttons=0; break;
-			case 4:  screen_sd(); has_buttons=0; break;
-			case 5:  screen_t(); has_buttons=0; break;
-			case 6:  screen_power(); has_buttons=0; break;
-			case 7:  screen_gps_location(); has_buttons=0; break;
-			case 8:  screen_missed_acks(); has_buttons=0; break;
-			case 9:  screen_gprs_status(); has_buttons=0; break;
-			case 10: screen_uptime(); has_buttons=0; break;
-			case 11: screen_modem_seconds(); has_buttons=0; break;
-			case 12: has_buttons=screen_set_date();  break;
-			case 13: has_buttons=screen_set_time(); break;
-			case 14: screen_download(); has_buttons=0; break;
-		}
-	} else {
 		switch ( screen ) {
 			case 0:  screen_wind(); has_buttons=0; break;
 			case 1:  screen_wind_direction(); has_buttons=0; break;
@@ -587,6 +530,5 @@ void screen_select(void) {
 			case 9:  has_buttons=screen_set_time(); break;
 			case 10: screen_download(); has_buttons=0; break;
 		}
-	}
 
 }

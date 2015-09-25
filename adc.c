@@ -164,7 +164,7 @@ void sample_adc(void) {
 	current.battery_charge=battery_charge(value);
 
 	/* wind direction */
-	if ( HARDWARE_TYPE_RDLOGGERCELL == current.hardware_type || HARDWARE_TYPE_RDLOGGERUNIVERSAL == current.hardware_type )  {
+	if ( HARDWARE_TYPE_RDLOGGERUNIVERSAL == current.hardware_type )  {
 		set_adc_channel(ADC_WV0_FILTERED);
 	} else {
 		set_adc_channel(3);
