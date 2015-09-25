@@ -127,7 +127,6 @@ typedef struct {
 
 /* global structures */
 struct_current current;
-//struct_gprs gprs;
 struct_wireless wireless;
 struct_action action;
 struct_time_keep timers;
@@ -301,16 +300,6 @@ void basicInit() {
 	enable_interrupts(GLOBAL);
 }
 
-void rdLoggerInit(void) {
-//	if ( make16(current.serial_msb,current.serial_lsb) > 50 ) 
-//		current.hardware_type=HARDWARE_TYPE_RDLOGGERCELL;
-//	else
-//		current.hardware_type=HARDWARE_TYPE_RDLOGGER;
-//		current.hardware_type=HARDWARE_TYPE_RDLOGGERUNIVERSAL;
-
-		/* UART2 connects direct to mmcDaughter, so we need be at 9600 */
-		set_uart_speed(9600,stream_gprs);
-}
 
 void secondTasks(void) {
 	static int8 last_minute=100;
@@ -422,7 +411,6 @@ void main(void) {
 	/* start the modem booting */
 	lcd_clear();
 	serialNumberCheck();
-	rdLoggerInit();
 
 	startupCountdown();
 

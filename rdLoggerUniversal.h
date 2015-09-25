@@ -9,7 +9,7 @@
 #use delay(clock=8000000)
 
 #use rs232(stream=stream_wireless,baud=57600,xmit=PIN_C6,rcv=PIN_C7,ERRORS)	
-#use rs232(stream=stream_gprs,baud=57600,xmit=PIN_G1,rcv=PIN_G2,ERRORS)
+#use rs232(stream=stream_sd,baud=9600,xmit=PIN_G1,rcv=PIN_G2,ERRORS)
 #use i2c(master, sda=PIN_C4, scl=PIN_C3, FAST)
 
 #use standard_io(A)

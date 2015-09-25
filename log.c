@@ -251,8 +251,8 @@ void log_now(void) {
 	write_record(buff_binary);
 	/* write to SD card */
 	for ( i=0 ; i<strlen(buff_decimal) ; i++ ) {
-		/* rdLogger via builtin UART2 (with misleading stream name) */
-		fputc(buff_decimal[i],stream_gprs);
+		/* rdLogger via builtin UART2 */
+		fputc(buff_decimal[i],stream_sd);
 		delay_ms(1);
 	}
 

@@ -14,13 +14,10 @@ void isr_100us(void) {
 		ms=0;
 
 		/* update timers / counters */
-//		if ( gprs.age < 65535 ) gprs.age++;
-//		if ( gprs.age_response < 65535 ) gprs.age_response++;
 		if ( wireless.age < 65535 ) wireless.age++;
 		if ( wireless.age_response < 65535 ) wireless.age_response++;
 	
 		/* set flags if we have a message ready */
-//		if ( gprs.buff_length && gprs.age > 50 && gprs.age < 65535 ) gprs.now_generate_message=1;
 		if ( wireless.buff_length && wireless.age > 5 && wireless.age < 65535 ) wireless.now_generate_message=1;
 	
 		/* button must be down for 12 milliseconds */
@@ -110,9 +107,8 @@ void serial_isr_wireless(void) {
 }
 
 #int_rda2
-void serial_isr_gprs(void) {
+void serial_isr_sd(void) {
 	int8 c;
 
-	c=fgetc(stream_gprs);
-	
+	c=fgetc(stream_sd);
 }
