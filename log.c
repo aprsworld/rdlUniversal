@@ -188,8 +188,8 @@ void log_now(void) {
 	int16 pulse_period,pulse_min_period,pulse_count;
 	int8 i;
 
-	/* shut off anemometer so we this won't get mutated */
-	disable_interrupts(INT_EXT);
+	/* shut off main timer so we don't change while we copy */
+	disable_interrupts(INT_TIMER2);
 	pulse_period = current.pulse_period;
 	pulse_min_period = current.pulse_min_period;
 	pulse_count = current.pulse_count;
@@ -198,7 +198,7 @@ void log_now(void) {
 	current.pulse_period=0;
 	current.pulse_min_period=0xffff;
 	current.pulse_count=0;
-	enable_interrupts(INT_EXT);
+	enable_interrupts(INT_TIMER2);
 
 	/* binary */
 	buff_binary[0]=timers.year;

@@ -314,7 +314,7 @@ void startupCountdown() {
 void task_second(void) {
 	static int8 last_minute=100;
 
-	action.now_second=0;
+	output_toggle(_LCD_BACKLIGHT);
 
 	update_time_rtc();
 
@@ -372,15 +372,12 @@ void task_10millisecond(void) {
 	static int16 b2_state=0;
 	int8 b;
 
-	output_high(PIN_F0);
 
 	b=port_b;	
 
 	/* check to see if we got a falling edge from the RTC square wave */
 	if ( ! bit_test(b,4) && bit_test(action.port_b,4)	) {
 		action.now_second=1;
-
-
 	}
 
 	/* draw screen on rising edge of RTC square wave */
@@ -424,7 +421,6 @@ void task_10millisecond(void) {
 
 
 void main(void) {
-	output_low(PIN_F0);
 	basicInit();
 
 	wirelessOn(30);
@@ -470,6 +466,15 @@ void main(void) {
 	for ( ; ; ) {
 		restart_wdt();
 
+		if  ( action.now_10millisecond ) {
+			action.now_10millisecond=0;
+			task_10millisecond();
+		}
+
+		if ( action.now_second ) {
+			action.now_second=0;
+			task_second();
+		}
 
 		/* wireless 802.15.4 related stuff */
 		if ( wireless.now_generate_message ) {
@@ -479,14 +484,6 @@ void main(void) {
 
 		wirelessTick();
 
-		if  ( action.now_10millisecond ) {
-			action.now_10millisecond=0;
-			task_10millisecond();
-		}
-
-		if ( action.now_second ) {
-			task_second();
-		}
 
 		/* send a live packet */
 		if ( action.now_live ) {
@@ -498,6 +495,7 @@ void main(void) {
 			liveStatusTask();
 		}
 
+
 		/* handle sending requested log pages */
 		logSendTick();
 
@@ -507,6 +505,7 @@ void main(void) {
 			screen_select();
 		}
 
+		/* this one seems to crash it */
 		if ( action.now_log ) {
 			action.now_log=0;
 			log_now();
