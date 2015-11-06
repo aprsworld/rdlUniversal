@@ -1,4 +1,38 @@
+#int_timer3
+/* this timer only runs during boot-up to do key presses */
+void isr_10ms(void) {
+	static int16 b0_state=0;
+	static int16 b1_state=0;
+	static int16 b2_state=0;
+
+	set_timer3(45536);
+
+	action.port_b=port_b;
+
+	/* button must be down for 12 milliseconds */
+	b0_state=(b0_state<<1) | !bit_test(action.port_b,BUTTON_0_BIT) | 0xe000;
+	if ( b0_state==0xf000) {
+		action.down_now=1;
+		action.now_redraw=1;
+		timers.backlight_seconds=BACKLIGHT_TIMEOUT_SECONDS;
+	}
+	b1_state=(b1_state<<1) | !bit_test(action.port_b,BUTTON_1_BIT) | 0xe000;
+	if ( b1_state==0xf000) {
+		action.select_now=1;	
+		action.now_redraw=1;
+		timers.backlight_seconds=BACKLIGHT_TIMEOUT_SECONDS;
+	}
+
+	b2_state=(b2_state<<1) | !bit_test(action.port_b,BUTTON_2_BIT) | 0xe000;
+	if ( b2_state==0xf000) {
+		action.up_now=1;
+		action.now_redraw=1;
+		timers.backlight_seconds=BACKLIGHT_TIMEOUT_SECONDS;
+	}
+}
+
 #int_timer2 HIGH
+/* this timer only runs once booted */
 void isr_100us(void) {
 	static int8 tick=0;
 

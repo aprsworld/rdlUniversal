@@ -135,6 +135,9 @@ int16 crc_chk(int8 *data, int8 length) {
 	return reg_crc;
 }
 
+/* declare routine called by timer0 ISR */
+void task_10millisecond(void);
+
 #include "interrupts.c"
 #include "wireless.c"
 #include "lcd.c"
@@ -255,10 +258,14 @@ void basicInit() {
 	/* prescale=4, match=49, postscale=1. Match is 49 because when match occurs, one cycle is lost */
 	setup_timer_2(T2_DIV_BY_4,49,1); 
 
+
+	/* setup timer 3 to be a 10ms timer. It only runs while we are booting */
+	setup_timer_3(T3_INTERNAL | T3_DIV_BY_1 ); /* preload to 45536 to get 10.0 milliseconds */
+
 	/* receive data from serial ports */
 	enable_interrupts(INT_RDA);
 	enable_interrupts(INT_RDA2);
-	enable_interrupts(INT_TIMER2);
+
 
 	port_b_pullups(TRUE);
 	enable_interrupts(GLOBAL);
@@ -296,7 +303,8 @@ void startupCountdown() {
 		lcd_goto(LCD_LINE_TWO);
 		printf(lcd_putch,"Up in %u ID=%c%lu ",i,read_eeprom(EE_SERIAL_PREFIX),serial);
 		fprintf(stream_wireless,"# UP IN %u SECONDS\r\n",i);
-
+		delay_ms(1000);
+		restart_wdt();
 	}
 	
 
@@ -314,16 +322,14 @@ void startupCountdown() {
 void task_second(void) {
 	static int8 last_minute=100;
 
-	output_toggle(_LCD_BACKLIGHT);
-
 	update_time_rtc();
 
 	/* control backlight */
 	if (  0 == timers.backlight_seconds ) {
 		/* auto, and we have finished counting down */
-//		output_high(LCD_BACKLIGHT);
+		output_high(LCD_BACKLIGHT);
 	} else {
-//		output_low(LCD_BACKLIGHT);
+		output_low(LCD_BACKLIGHT);
 		timers.backlight_seconds--;
 	}
 
@@ -422,6 +428,8 @@ void task_10millisecond(void) {
 
 void main(void) {
 	basicInit();
+	enable_interrupts(INT_TIMER3);
+	output_low(LCD_BACKLIGHT);
 
 	wirelessOn(30);
 
@@ -429,12 +437,11 @@ void main(void) {
 
 	/* start the modem booting */
 	lcd_clear();
-//	serialNumberCheck();
+	serialNumberCheck();
 
 	startupCountdown();
 
 	/* hold down all three buttons to reset the log */
-	action.port_b=port_b;
 	if ( 0==bit_test(action.port_b,BUTTON_0_BIT) && 0==bit_test(action.port_b,BUTTON_1_BIT) && 0==bit_test(action.port_b,BUTTON_1_BIT) ) {
 		action.up_now=0;
 		action.down_now=0;
@@ -461,6 +468,13 @@ void main(void) {
 	timers.live_seconds=10;	
 
 	delay_ms(100);
+
+	/* stop 10mS boot up timer */
+	disable_interrupts(INT_TIMER3);
+	output_high(LCD_BACKLIGHT);
+
+	/* start 100uS timer */
+	enable_interrupts(INT_TIMER2);
 
 	/* main loop */
 	for ( ; ; ) {
