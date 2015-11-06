@@ -267,10 +267,10 @@ void basicInit() {
 
 	port_b_pullups(TRUE);
 	delay_ms(1);
-	enable_interrupts(INT_RB);
+//	enable_interrupts(INT_RB);
 	
 	ext_int_edge(0,H_TO_L);
-	enable_interrupts(INT_EXT);
+//	enable_interrupts(INT_EXT);
 	enable_interrupts(GLOBAL);
 }
 
