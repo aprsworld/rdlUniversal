@@ -22,31 +22,6 @@ typedef struct {
 
 
 typedef struct {
-	int8  state;
-	int8  connect_state;
-	int8  connect_retries;
-	int8  connects_failed;
-
-	short now_generate_message; 
-	short connection_open;
-	int16 uptime;
-
-
-	int8  buff[512];    
-	int16 buff_length;    // bytes of data in buffer
-	int16 age;            // age (milliseconds) of receive buffer
-	int16 age_response;
-
-	int8  message[513];
-	short message_waiting;
-
-	int8  checksum_last_msb, checksum_last_lsb;
-	int8  checksum_rx_msb, checksum_rx_lsb;
-	short checksum_rx_used;
-	int8  missed_acks;
-} struct_gprs;
-
-typedef struct {
 	short now_generate_message; 
 
 	int8  buff[128];    
@@ -61,13 +36,11 @@ typedef struct {
 typedef struct {
 	short now_redraw;
 	short now_log;
-//	short now_log_dump;
 	short now_log_init;
 	short now_log_mark_downloaded;
-//	short now_log_play;
 	short now_live;
 	short now_live_status;
-//	short now_debug;
+	short now_10millisecond;
 	short now_second;
 	short now_gps_update;
 
@@ -202,6 +175,7 @@ void basicInit() {
 	action.now_live=0;
 	action.now_live_status=0;
 	action.now_gps_update=1;
+	action.now_10millisecond=0;
 	action.now_second=0;
 
 	action.up_now=0;
@@ -301,7 +275,7 @@ void basicInit() {
 }
 
 
-void secondTasks(void) {
+void task_second(void) {
 	static int8 last_minute=100;
 
 	action.now_second=0;
@@ -400,6 +374,60 @@ void startupCountdown() {
 	);
 }
 
+void task_10millisecond(void) {
+	static int16 b0_state=0;
+	static int16 b1_state=0;
+	static int16 b2_state=0;
+	int8 b;
+
+	/* current port b must be read before interrupt will quite firing */
+	b=port_b;	
+
+	/* check to see if we got a falling edge from the RTC square wave */
+	if ( ! bit_test(b,4) && bit_test(action.port_b,4)	) {
+		action.now_second=1;
+	}
+
+	/* draw screen on rising edge of RTC square wave */
+	if ( bit_test(b,4) && ! bit_test(action.port_b,4)	) {
+		action.now_redraw=1;
+	}
+
+	action.port_b=b;
+
+	/* update timers / counters */
+	if ( wireless.age < 65535 ) 
+		wireless.age++;
+	if ( wireless.age_response < 65535 ) 
+		wireless.age_response++;
+
+	/* set flags if we have a message ready */
+	if ( wireless.buff_length && wireless.age > 5 && wireless.age < 65535 ) 
+		wireless.now_generate_message=1;
+
+	/* button must be down for 12 milliseconds */
+	b0_state=(b0_state<<1) | !bit_test(action.port_b,BUTTON_0_BIT) | 0xe000;
+	if ( b0_state==0xf000) {
+		action.down_now=1;
+		action.now_redraw=1;
+		timers.backlight_seconds=BACKLIGHT_TIMEOUT_SECONDS;
+	}
+	b1_state=(b1_state<<1) | !bit_test(action.port_b,BUTTON_1_BIT) | 0xe000;
+	if ( b1_state==0xf000) {
+		action.select_now=1;	
+		action.now_redraw=1;
+		timers.backlight_seconds=BACKLIGHT_TIMEOUT_SECONDS;
+	}
+
+	b2_state=(b2_state<<1) | !bit_test(action.port_b,BUTTON_2_BIT) | 0xe000;
+	if ( b2_state==0xf000) {
+		action.up_now=1;
+		action.now_redraw=1;
+		timers.backlight_seconds=BACKLIGHT_TIMEOUT_SECONDS;
+	}
+}
+
+
 void main(void) {
 
 	basicInit();
@@ -414,8 +442,8 @@ void main(void) {
 
 	startupCountdown();
 
-	/* hold down all three buttons to reset the log */
-//	if ( 1==action.up_now && 1==action.down_now && 1==action.select_now ) {
+/* hold down all three buttons to reset the log */
+	action.port_b=port_b;
 	if ( 0==bit_test(action.port_b,BUTTON_0_BIT) && 0==bit_test(action.port_b,BUTTON_1_BIT) && 0==bit_test(action.port_b,BUTTON_1_BIT) ) {
 		action.up_now=0;
 		action.down_now=0;
@@ -447,7 +475,6 @@ void main(void) {
 	for ( ; ; ) {
 		restart_wdt();
 
-//		output_toggle(MMC_STATUS_TO_SD);
 
 		/* wireless 802.15.4 related stuff */
 		if ( wireless.now_generate_message ) {
@@ -457,8 +484,13 @@ void main(void) {
 
 		wirelessTick();
 
+		if  ( action.now_10millisecond ) {
+			action.now_10millisecond=0;
+			task_10millisecond();
+		}
+
 		if ( action.now_second ) {
-			secondTasks();
+			task_second();
 		}
 
 		/* send a live packet */
@@ -494,28 +526,3 @@ void main(void) {
 }
 
 
-#if 0
-	/* left button does GPS test */
-	if ( 0==input(BUTTON_0) && 1==input(BUTTON_1) && 1==input(BUTTON_2) ) {
-		lcd_clear();
-		lcd_putch("GPS echo to Xbee");
-		lcd_goto(LCD_LINE_TWO);
-		lcd_putch("SELECT TO END");
-
-		fprintf(stream_wireless,"# about to start GPS receive test\r\n");
-		for ( ; ; ) {
-			output_high(GPS_EN);
-			if ( uart_kbhit() )  {
-				fputc(uart_getc(),stream_wireless);
-			}
-
-			if ( action.select_now ) {
-				action.select_now=0;
-				break;
-			}
-			
-			restart_wdt();
-			wirelessOn(120);
-		}
-	}
-#endif
