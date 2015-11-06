@@ -60,6 +60,7 @@ void screen_power(void) {
 
 	voltage=(40.0/1024)*current.input_voltage_adc;
 	printf(lcd_putch,"Input: %0.1lf volts",voltage);
+	//printf(lcd_putch,"Input: %lu volts",current.input_voltage_adc);
 	lcd_goto(LCD_LINE_TWO);
 	
 	printf(lcd_putch,"Battery: %d%%",current.battery_charge*10);
