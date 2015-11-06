@@ -169,9 +169,8 @@ void screen_set_serial(short reset) {
 	serial_prefix=read_eeprom(EE_SERIAL_PREFIX);
 	serial=make16(read_eeprom(EE_SERIAL_MSB),read_eeprom(EE_SERIAL_LSB));
 
-#ignore_warnings 203
-	while ( 1 ) {
-#ignore_warnings NONE
+
+	for ( ; ; ) {
 		lcd_goto(LCD_LINE_ONE);
 		printf(lcd_putch,"Serial: %c%lu     ",serial_prefix,serial);
 		lcd_goto(LCD_LINE_TWO);
@@ -216,9 +215,9 @@ void screen_set_serial(short reset) {
 	delay_ms(1000);
 	lcd_clear();
 
-	#ignore_warnings 203
-	while ( 1 ) {
-#ignore_warnings NONE
+
+	for ( ; ; ) {
+
 		lcd_goto(LCD_LINE_ONE);
 		printf(lcd_putch," - HW TYPE - ");
 		lcd_goto(LCD_LINE_TWO);
@@ -518,7 +517,7 @@ void screen_select(void) {
 
 
 		switch ( screen ) {
-			case 0:  screen_wind(); has_buttons=0; break;
+			case 0:  screen_t(); has_buttons=0; break; // should be screen_wind()
 			case 1:  screen_wind_direction(); has_buttons=0; break;
 			case 2:  screen_time_date(); has_buttons=0; break;
 			case 3:  screen_dataflash(); has_buttons=0; break;

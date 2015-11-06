@@ -50,7 +50,7 @@
 #define LCD_D5 PIN_F5	// Data bits
 #define LCD_D6 PIN_F6   // Data bits
 #define LCD_D7 PIN_F7   // Data bits
-#define LCD_BACKLIGHT PIN_F0
+#define _LCD_BACKLIGHT PIN_F0
 
 /* XBee Pro modem */
 #define MODEM_SLEEP        PIN_E5

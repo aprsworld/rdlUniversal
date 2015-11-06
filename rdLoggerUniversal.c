@@ -161,11 +161,7 @@ void basicInit() {
 	int8 buff[32];
 
 	setup_oscillator(OSC_8MHZ|OSC_INTRC);
-//	if ( HARDWARE_TYPE_RDLOGGERCELL == current.hardware_type )  {
-//		setup_adc_ports(AN0_TO_AN1 | VSS_VDD);
-//	} else {
-		setup_adc_ports(AN0_TO_AN3 | VSS_VDD);
-//	}
+	setup_adc_ports(AN0_TO_AN3 | VSS_VDD);
 	setup_adc(ADC_CLOCK_INTERNAL);
 
 	action.now_log=0;
@@ -255,10 +251,9 @@ void basicInit() {
 		reset_rtc();
 	}
 
-	/* 8 MHz clock rate */
-	/* limit to one periodic timer so as not to cause too much jitter */
-	/* 0.1mS (100uS) period with 8 MHz clock rate */
-	setup_timer_2(T2_DIV_BY_4,48,1); 
+	/* one periodic interrupt @ 100uS. Generated from system 8 MHz clock */
+	/* prescale=4, match=49, postscale=1. Match is 49 because when match occurs, one cycle is lost */
+	setup_timer_2(T2_DIV_BY_4,49,1); 
 
 	/* receive data from serial ports */
 	enable_interrupts(INT_RDA);
@@ -266,68 +261,10 @@ void basicInit() {
 	enable_interrupts(INT_TIMER2);
 
 	port_b_pullups(TRUE);
-	delay_ms(1);
-//	enable_interrupts(INT_RB);
-	
-	ext_int_edge(0,H_TO_L);
-//	enable_interrupts(INT_EXT);
 	enable_interrupts(GLOBAL);
 }
 
 
-void task_second(void) {
-	static int8 last_minute=100;
-
-	action.now_second=0;
-
-	update_time_rtc();
-
-	/* control backlight */
-	if (  0 == timers.backlight_seconds ) {
-		/* auto, and we have finished counting down */
-		output_high(LCD_BACKLIGHT);
-	} else {
-		output_low(LCD_BACKLIGHT);
-		timers.backlight_seconds--;
-	}
-
-	/* turn modem on if we got anything */
-	if (  0 == timers.modem_seconds ) {
-		/* auto, and we have finished counting down */
-		wirelessOff();
-	} else {
-		wirelessOn(0);
-		timers.modem_seconds--;
-	}
-
-	if ( 0 == timers.live_seconds ) {
-		action.now_live=1;
-		timers.live_seconds=9;
-	} else {
-		timers.live_seconds--;
-	}
-
-	/* check to see if we are on a new minute */
-	if ( timers.minute != last_minute ) {
-		action.now_log=1;
-		last_minute=timers.minute;
-
-
-		if ( current.uptime<65535 )
-			current.uptime++;
-
-		/* GPS starts at 30 minutes after hour, aborts at 45 minutes */
-		if ( 30==timers.minute )
-			action.now_gps_update=1;
-		else if ( 45 == timers.minute ) 
-			action.now_gps_update=0;
-
-		/* send status */
-		if ( 5==timers.minute || 20==timers.minute || 35==timers.minute || 50==timers.minute ) {
-			action.now_live_status=1;
-		}
-	}
-}
 
 
 void serialNumberCheck(void) {
@@ -374,18 +311,76 @@ void startupCountdown() {
 	);
 }
 
+void task_second(void) {
+	static int8 last_minute=100;
+
+	action.now_second=0;
+
+	update_time_rtc();
+
+	/* control backlight */
+	if (  0 == timers.backlight_seconds ) {
+		/* auto, and we have finished counting down */
+//		output_high(LCD_BACKLIGHT);
+	} else {
+//		output_low(LCD_BACKLIGHT);
+		timers.backlight_seconds--;
+	}
+
+	/* turn modem on if we got anything */
+	if (  0 == timers.modem_seconds ) {
+		/* auto, and we have finished counting down */
+		wirelessOff();
+	} else {
+		wirelessOn(0);
+		timers.modem_seconds--;
+	}
+
+	if ( 0 == timers.live_seconds ) {
+		action.now_live=1;
+		timers.live_seconds=9;
+	} else {
+		timers.live_seconds--;
+	}
+
+	/* check to see if we are on a new minute */
+	if ( timers.minute != last_minute ) {
+		action.now_log=1;
+		last_minute=timers.minute;
+
+
+		if ( current.uptime<65535 )
+			current.uptime++;
+
+		/* GPS starts at 30 minutes after hour, aborts at 45 minutes */
+		if ( 30==timers.minute )
+			action.now_gps_update=1;
+		else if ( 45 == timers.minute ) 
+			action.now_gps_update=0;
+
+		/* send status */
+		if ( 5==timers.minute || 20==timers.minute || 35==timers.minute || 50==timers.minute ) {
+			action.now_live_status=1;
+		}
+	}
+}
+
+
 void task_10millisecond(void) {
 	static int16 b0_state=0;
 	static int16 b1_state=0;
 	static int16 b2_state=0;
 	int8 b;
 
-	/* current port b must be read before interrupt will quite firing */
+	output_high(PIN_F0);
+
 	b=port_b;	
 
 	/* check to see if we got a falling edge from the RTC square wave */
 	if ( ! bit_test(b,4) && bit_test(action.port_b,4)	) {
 		action.now_second=1;
+
+
 	}
 
 	/* draw screen on rising edge of RTC square wave */
@@ -429,7 +424,7 @@ void task_10millisecond(void) {
 
 
 void main(void) {
-
+	output_low(PIN_F0);
 	basicInit();
 
 	wirelessOn(30);
@@ -438,11 +433,11 @@ void main(void) {
 
 	/* start the modem booting */
 	lcd_clear();
-	serialNumberCheck();
+//	serialNumberCheck();
 
 	startupCountdown();
 
-/* hold down all three buttons to reset the log */
+	/* hold down all three buttons to reset the log */
 	action.port_b=port_b;
 	if ( 0==bit_test(action.port_b,BUTTON_0_BIT) && 0==bit_test(action.port_b,BUTTON_1_BIT) && 0==bit_test(action.port_b,BUTTON_1_BIT) ) {
 		action.up_now=0;

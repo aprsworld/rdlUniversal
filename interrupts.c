@@ -45,28 +45,6 @@ void isr_100us(void) {
 
 
 
-#if 0
-void isr_rb(void) {
-	int8 b;
-
-	/* current port b must be read before interrupt will quite firing */
-	b=port_b;	
-
-	/* check to see if we got a falling edge from the RTC square wave */
-	if ( ! bit_test(b,4) && bit_test(action.port_b,4)	) {
-		action.now_second=1;
-	}
-
-	/* draw screen on rising edge of RTC square wave */
-	if ( bit_test(b,4) && ! bit_test(action.port_b,4)	) {
-		action.now_redraw=1;
-	}
-
-	action.port_b=b;
-}
-#endif
-
-
 
 #int_rda
 void serial_isr_wireless(void) {
