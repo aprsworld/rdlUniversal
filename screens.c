@@ -517,7 +517,7 @@ void screen_select(void) {
 
 
 		switch ( screen ) {
-			case 0:  screen_t(); has_buttons=0; break; // should be screen_wind()
+			case 0:  screen_wind(); has_buttons=0; break;
 			case 1:  screen_wind_direction(); has_buttons=0; break;
 			case 2:  screen_time_date(); has_buttons=0; break;
 			case 3:  screen_dataflash(); has_buttons=0; break;
