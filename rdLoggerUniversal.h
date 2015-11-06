@@ -1,6 +1,7 @@
 #include <18F6622.h>
 #device ADC=10
 #device *=16
+#DEVICE HIGH_INTS=TRUE
 #include <stdlib.h>
 
 #define FASTOSC 0
