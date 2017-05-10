@@ -17,6 +17,7 @@ void screen_modem_seconds(void) {
 }
 
 
+#if 0
 void screen_gps_location(void) {
 	printf(lcd_putch,"Lat:  %02.4lf",gps.latitude);
 	lcd_goto(LCD_LINE_TWO);
@@ -32,6 +33,7 @@ void screen_gps_location(void) {
 		action.now_gps_update=1;
 	}
 }
+#endif
 
 void screen_sd(void) {
 	printf(lcd_putch,"SD Card Status:");
@@ -87,17 +89,29 @@ void screen_wind_direction(void) {
 }
 
 void screen_t(void) {
-//	printf(lcd_putch,"%04lu  %04lu  %04lu",current.pulse_period,current.pulse_min_period,current.pulse_count);
-	printf(lcd_putch,"%05lu",current.pulse_period);
-	lcd_goto(LCD_LINE_ONE+6);
-	printf(lcd_putch,"%05lu",current.pulse_min_period);
-	lcd_goto(LCD_LINE_ONE+12);
-	printf(lcd_putch,"%04lu",current.pulse_count);
-// 65535 65535 65535
-// T     TMin  Tcount
-// 0123456789012345
-	lcd_goto(LCD_LINE_TWO);
-	printf(lcd_putch,"T     Tmin Count");
+	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+		printf(lcd_putch,"%lu",current.anemometer_f);
+		lcd_goto(LCD_LINE_ONE+6);
+		printf(lcd_putch,"%lu",current.anemometer_f_max);
+		lcd_goto(LCD_LINE_ONE+12);
+		printf(lcd_putch,"%lu",current.anemometer_count);
+		
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"F(Hz) FMax  Cnt");
+//                        0123456789012345
+
+
+	} else {
+		printf(lcd_putch,"%05lu",current.pulse_period);
+		lcd_goto(LCD_LINE_ONE+6);
+		printf(lcd_putch,"%05lu",current.pulse_min_period);
+		lcd_goto(LCD_LINE_ONE+12);
+		printf(lcd_putch,"%04lu",current.pulse_count);
+		
+		lcd_goto(LCD_LINE_TWO);
+		
+		printf(lcd_putch,"T     Tmin Count");
+	}
 }
 
 void screen_time_date(void) {
@@ -110,12 +124,32 @@ void screen_wind(void) {
 	float ws;
 	float wg;
 
-	if ( current.pulse_period>0 && current.pulse_period<65535 ) {
-		ws = 7650.0 / current.pulse_period + 0.35;
+	if ( ANEMOMETER_TYPE_40HC == current.anemometer_type ) {
+		if ( current.pulse_period>0 && current.pulse_period<65535 ) {
+			ws = 7650.0 / current.pulse_period + 0.35;
+		}
+		if ( current.pulse_min_period>0 && current.pulse_min_period<65535 ) {
+			wg = 7650.0 / current.pulse_min_period + 0.35;
+		}
+	} else if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+		/* if THEIS anemometer, current.pulse_period is in Hz */
+		if ( current.anemometer_f > 0 ) {
+			ws = 0.04598 * current.anemometer_f + 0.24786;
+		} else {
+			ws = 0.0;
+		}
+
+		if ( current.anemometer_f_max > 0 ) {
+			wg = 0.04598 * current.anemometer_f_max + 0.24786;
+		} else {
+			wg = 0.0;
+		}
+
+	} else {
+		ws=-1.0;
+		wg=-1.0;
 	}
-	if ( current.pulse_min_period>0 && current.pulse_min_period<65535 ) {
-		wg = 7650.0 / current.pulse_min_period + 0.35;
-	}
+
 //	printf(lcd_putch,"%02.1f %02.1f %05lu",ws,wg,current.pulse_count[0]);
 //                    0123456789012345
 //                    12.3 m/s 45.6 m/s
@@ -153,12 +187,14 @@ void screen_set_serial(short reset) {
 	int8 serial_prefix;
 	int16 serial;
 	int8 hwtype;
+	int8 antype;
 
 	if ( reset ) {
 		write_eeprom(EE_SERIAL_PREFIX,'R');
 		write_eeprom(EE_SERIAL_MSB,0x00);
 		write_eeprom(EE_SERIAL_LSB,0x00);
 		write_eeprom(EE_HW_TYPE,HARDWARE_TYPE_RDLOGGERUNIVERSAL);
+		write_eeprom(EE_ANEMOMETER_TYPE,ANEMOMETER_TYPE_40HC);
 
 
 		lcd_clear();
@@ -203,12 +239,14 @@ void screen_set_serial(short reset) {
 	write_eeprom(EE_SERIAL_MSB,make8(serial,1));
 	write_eeprom(EE_SERIAL_LSB,make8(serial,0));
 	write_eeprom(EE_HW_TYPE,hwtype);
+	write_eeprom(EE_ANEMOMETER_TYPE,antype);
 
 	/* read it back out */
 	current.serial_prefix=read_eeprom(EE_SERIAL_PREFIX);
 	current.serial_msb=read_eeprom(EE_SERIAL_MSB);
 	current.serial_lsb=read_eeprom(EE_SERIAL_LSB);
 	current.hardware_type=read_eeprom(EE_HW_TYPE);
+	current.anemometer_type=read_eeprom(EE_ANEMOMETER_TYPE);
 
 
 	lcd_clear();
@@ -254,6 +292,47 @@ void screen_set_serial(short reset) {
 
 	lcd_clear();
 	lcd_putch("Wrote HW Type");
+	delay_ms(1000);
+	lcd_clear();
+
+	for ( ; ; ) {
+
+		lcd_goto(LCD_LINE_ONE);
+		printf(lcd_putch," - ANEMO TYPE - ");
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"#40HC      THEIS");
+//                        0123456789012345
+
+		if ( action.select_now ) {
+			action.select_now=0;
+		}
+
+		if ( action.up_now ) {
+			action.up_now=0;
+			antype=ANEMOMETER_TYPE_THEIS;
+			break;
+		}
+
+		if ( action.down_now ) {
+			action.down_now=0;
+			antype=ANEMOMETER_TYPE_40HC;
+			break;
+		}
+
+		delay_ms(20);
+		restart_wdt();
+	}
+
+
+	/* write the new hardware type */
+	write_eeprom(EE_ANEMOMETER_TYPE,antype);
+
+	/* read it back out */
+	current.anemometer_type=read_eeprom(EE_ANEMOMETER_TYPE);
+
+
+	lcd_clear();
+	lcd_putch("Wrote Anemo Type");
 	delay_ms(1000);
 	lcd_clear();
 

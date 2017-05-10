@@ -1,6 +1,6 @@
 #int_timer3
 /* this timer only runs during boot-up to do key presses */
-void isr_10ms(void) {
+void isr_10ms_boot(void) {
 	static int16 b0_state=0;
 	static int16 b1_state=0;
 	static int16 b2_state=0;
@@ -31,8 +31,44 @@ void isr_10ms(void) {
 	}
 }
 
+#int_ext
+void isr_anemometer_theis(void) {
+	timers.anemometer_count++;
+	current.anemometer_count++;
+}
+
+#int_timer1 HIGH
+/* this timer only runs once booted and anemometer type is THEIS */
+void isr_10ms_theis(void) {
+	static int8 tick=0;
+
+	/* preload so we expire in 10 milliseconds */
+	set_timer1(25536);
+
+	/* signal main to do periodic activities */
+	action.now_10millisecond=1;
+
+	tick++;
+	if ( 100 == tick ) {
+		/* anemometer frequency in Hz (for wind speed) */
+		current.anemometer_f=timers.anemometer_count;
+
+		/* reset Hz counter */
+		timers.anemometer_count=0;
+		/* live_send() resets current.pulse_count which is the pulses in 10 seconds */
+		
+		/* (for wind gust) */
+		if ( current.anemometer_f > current.anemometer_f_max ) {
+			current.anemometer_f_max = current.anemometer_f;
+		}
+		
+
+		tick=0;
+	}
+}
+
 #int_timer2 HIGH
-/* this timer only runs once booted */
+/* this timer only runs once booted and anemometer type isn't THEIS */
 void isr_100us(void) {
 	static int8 tick=0;
 
@@ -42,6 +78,7 @@ void isr_100us(void) {
 	short ext0_now;
 	static short ext0_last=0;
 	static short ext0_state=0;
+
 
 	/* count time between falling edges */
 	if ( ext0_count && 0xffff != timers.pulse_period )

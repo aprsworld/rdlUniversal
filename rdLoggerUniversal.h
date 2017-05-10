@@ -21,10 +21,11 @@
 #use standard_io(F)
 
 /* location where serial number is stored */
-#define EE_SERIAL_PREFIX 0x10
-#define EE_SERIAL_MSB    0x11
-#define EE_SERIAL_LSB    0x12
-#define EE_HW_TYPE       0x13
+#define EE_SERIAL_PREFIX   0x10
+#define EE_SERIAL_MSB      0x11
+#define EE_SERIAL_LSB      0x12
+#define EE_HW_TYPE         0x13
+#define EE_ANEMOMETER_TYPE 0x14
 
 //#define ANEMOMETER_TIMEOUT 2000
 #define MODEM_TIMEOUT_SECONDS 240
@@ -76,13 +77,6 @@
 /* GPS */
 #define GPS_EN             PIN_E6
 
-/* GPRS Modem - Multitech MMCModem GPRS */
-#define GPRS_CTS           PIN_G0
-#define GPRS_RTS           PIN_G3
-#define GPRS_ON            PIN_G4
-#define TO_GPRS            PIN_G1
-#define FROM_GPRS          PIN_G2
-
 /* analog inputs */
 #define AN_IN_VOLTS        PIN_A0
 #define AN0_FILTERED       PIN_B0
@@ -96,3 +90,6 @@
 #define HARDWARE_TYPE_RDLOGGER          0
 //#define HARDWARE_TYPE_RDLOGGERCELL      1
 #define HARDWARE_TYPE_RDLOGGERUNIVERSAL 2
+
+#define ANEMOMETER_TYPE_40HC  0
+#define ANEMOMETER_TYPE_THEIS 1

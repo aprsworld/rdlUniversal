@@ -2,9 +2,15 @@
 
 typedef struct {
 	/* most recent valid */
+	/* #40HC anemometer measure pulse period */
 	int16 pulse_period;
 	int16 pulse_min_period;
 	int16 pulse_count;
+
+	/* THEIS anemometer measures frequency */
+	int16 anemometer_f;
+	int16 anemometer_f_max; /* reset in live_send() */
+	int16 anemometer_count; /* resets in live_send() */
 
 	int16 input_voltage_adc;
 	int8 wind_direction_sector;
@@ -17,6 +23,7 @@ typedef struct {
 	int8 compile_year, compile_month, compile_day;
 	int16 uptime;
 	int8 hardware_type;
+	int8 anemometer_type;
 } struct_current;
 
 
@@ -70,6 +77,7 @@ typedef struct {
 
 	int16 pulse_period;
 	int16 pulse_count;
+	int16 anemometer_count;
 } struct_time_keep;
 
 typedef struct {
@@ -189,6 +197,12 @@ void basicInit() {
 	current.pulse_min_period=65535;
 	current.pulse_count=0;
 
+	current.anemometer_f=0;
+	current.anemometer_f_max=0;
+	current.anemometer_count=0;
+	timers.anemometer_count=0;
+
+
 	/* get our compiled date from constant */
 	strcpy(buff,__DATE__);
 	current.compile_day =(buff[0]-'0')*10;
@@ -240,6 +254,7 @@ void basicInit() {
 	current.serial_lsb=read_eeprom(EE_SERIAL_LSB);
 
 	current.hardware_type=read_eeprom(EE_HW_TYPE);
+	current.anemometer_type=read_eeprom(EE_ANEMOMETER_TYPE);
 
 	log.page_requested=65535;
 
@@ -254,6 +269,10 @@ void basicInit() {
 		reset_rtc();
 	}
 
+
+	/* one periodic interrupt @ 10mS. Generated from system 8 MHz clock. Used for THEIS anemometer */
+	setup_timer_1(T1_INTERNAL|T1_DIV_BY_2);
+
 	/* one periodic interrupt @ 100uS. Generated from system 8 MHz clock */
 	/* prescale=4, match=49, postscale=1. Match is 49 because when match occurs, one cycle is lost */
 	setup_timer_2(T2_DIV_BY_4,49,1); 
@@ -266,6 +285,8 @@ void basicInit() {
 	enable_interrupts(INT_RDA);
 	enable_interrupts(INT_RDA2);
 
+	/* external anemometer interrupt */
+	ext_int_edge(0,H_TO_L);
 
 	port_b_pullups(TRUE);
 	enable_interrupts(GLOBAL);
@@ -276,7 +297,7 @@ void basicInit() {
 
 void serialNumberCheck(void) {
 	/* 	middle button sets serial number */
-	if ( 'R' != read_eeprom(EE_SERIAL_PREFIX) || read_eeprom(EE_HW_TYPE) > HARDWARE_TYPE_RDLOGGERUNIVERSAL ) {
+	if ( 'R' != read_eeprom(EE_SERIAL_PREFIX) || read_eeprom(EE_HW_TYPE) > HARDWARE_TYPE_RDLOGGERUNIVERSAL || read_eeprom(EE_ANEMOMETER_TYPE) > ANEMOMETER_TYPE_THEIS ) {
 		screen_set_serial(1);
 	} else if ( 0==action.up_now && 1==action.select_now && 0==action.down_now ) {
 		action.select_now=0;
@@ -291,11 +312,19 @@ void startupCountdown() {
 	wirelessOn(20);
 
 	if ( HARDWARE_TYPE_RDLOGGER == current.hardware_type )
-		printf(lcd_putch,"rdLogger(U)");
+		printf(lcd_putch,"rdl(U)");
 	else if ( HARDWARE_TYPE_RDLOGGERUNIVERSAL == current.hardware_type ) 
-		printf(lcd_putch,"rdLoggerUniversal");
+		printf(lcd_putch,"rdlUni");
 	else
 		printf(lcd_putch,"unknown!");	
+
+	if ( ANEMOMETER_TYPE_40HC == current.anemometer_type ) {
+		printf(lcd_putch," #40HC");
+	} else if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+		printf(lcd_putch," THEIS");
+	} else {
+		printf(lcd_putch," UNKNOWN");
+	}
 
 	serial=make16(read_eeprom(EE_SERIAL_MSB),read_eeprom(EE_SERIAL_LSB));
 
@@ -308,14 +337,15 @@ void startupCountdown() {
 	}
 	
 
-	fprintf(stream_wireless,"# rdLoggerUniversal %s (20%02u-%02u-%02u) (serial %c%lu) (hardware %u)\r\n",
+	fprintf(stream_wireless,"# rdLoggerUniversal %s (20%02u-%02u-%02u) (serial %c%lu) (hardware %u) (anemometer %u)\r\n",
 		__DATE__,
 		current.compile_year,
 		current.compile_month,
 		current.compile_day,
 		read_eeprom(EE_SERIAL_PREFIX),
 		serial,
-		current.hardware_type
+		current.hardware_type,
+		current.anemometer_type
 	);
 }
 
@@ -473,9 +503,16 @@ void main(void) {
 	disable_interrupts(INT_TIMER3);
 	output_high(LCD_BACKLIGHT);
 
-	/* start 100uS timer */
-	enable_interrupts(INT_TIMER2);
+	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+		/* start 10mS timer */
+		enable_interrupts(INT_TIMER1);
+		enable_interrupts(INT_EXT);
+	} else {
+		/* start 100uS timer */
+		enable_interrupts(INT_TIMER2);
+	}
 
+	
 	/* main loop */
 	for ( ; ; ) {
 		restart_wdt();
