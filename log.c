@@ -187,6 +187,7 @@ void log_now(void) {
 	int8 buff_decimal[256]; /* to SD card and debugging */
 	int16 pulse_period,pulse_min_period,pulse_count;
 	int8 i;
+	int16 l;
 
 	/* shut off main timer so we don't change while we copy */
 	disable_interrupts(INT_TIMER2);
@@ -207,16 +208,30 @@ void log_now(void) {
 	buff_binary[3]=timers.hour;
 	buff_binary[4]=timers.minute;
 
-	buff_binary[5]=make8(pulse_period,1);
-	buff_binary[6]=make8(pulse_period,0);
-	buff_binary[7]=make8(pulse_min_period,1);
-	buff_binary[8]=make8(pulse_min_period,0);
+
+	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+		/* scale Theis anemometer frequency to #40HC recipricol frequency */
+		l=anemometer_theis_to_40HC(pulse_period);
+		buff_binary[5]=make8(l,1); /* wind speed */
+		buff_binary[6]=make8(l,0);
+
+		l=anemometer_theis_to_40HC(pulse_min_period);
+		buff_binary[7]=make8(l,1); /* wind gust */
+		buff_binary[8]=make8(l,0);
+
+	} else {
+		buff_binary[5]=make8(pulse_period,1);
+		buff_binary[6]=make8(pulse_period,0);
+		buff_binary[7]=make8(pulse_min_period,1);
+		buff_binary[8]=make8(pulse_min_period,0);
+	}
+
 	buff_binary[9]=make8(pulse_count,1);
 	buff_binary[10]=make8(pulse_count,0);
 	buff_binary[11]=(current.battery_charge<<4) + (current.wind_direction_sector & 0x0F); /* battery % full, wind direction sector */
 
 	/* decimal for human readability and for mmcDaughter */
-	sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u,%lu,%lu,%lu,%lu,%u,%0.5lf,%0.5lf,%u,%u,%u,%lu,%lu\n",
+	sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u,%lu,%lu,%lu,%lu,%u,%lu,%c%lu\n",
 		timers.year, 
 		timers.month, 
 		timers.day, 
@@ -227,13 +242,9 @@ void log_now(void) {
 		pulse_count, 
 		current.input_voltage_adc,
 		current.wind_direction_sector,
-		gps.latitude,
-		gps.longitude,
-		0, // gprs.connect_state,
-		0, //gprs.connect_retries,
-		0, //gprs.connects_failed,
 		current.uptime,
-		0 //gprs.uptime
+		current.serial_prefix,
+		make16(current.serial_msb,current.serial_lsb)
 	);
 	
 	/* debugging */
