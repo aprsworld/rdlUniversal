@@ -146,6 +146,7 @@ int16 crc_chk(int8 *data, int8 length) {
 /* declare routine called by timer0 ISR */
 void task_10millisecond(void);
 
+#include "anemometer_theis.c"
 #include "interrupts.c"
 #include "wireless.c"
 #include "lcd.c"
@@ -270,9 +271,6 @@ void basicInit() {
 	}
 
 
-	/* one periodic interrupt @ 10mS. Generated from system 8 MHz clock. Used for THEIS anemometer */
-	setup_timer_1(T1_INTERNAL|T1_DIV_BY_2);
-
 	/* one periodic interrupt @ 100uS. Generated from system 8 MHz clock */
 	/* prescale=4, match=49, postscale=1. Match is 49 because when match occurs, one cycle is lost */
 	setup_timer_2(T2_DIV_BY_4,49,1); 
@@ -284,9 +282,6 @@ void basicInit() {
 	/* receive data from serial ports */
 	enable_interrupts(INT_RDA);
 	enable_interrupts(INT_RDA2);
-
-	/* external anemometer interrupt */
-	ext_int_edge(0,H_TO_L);
 
 	port_b_pullups(TRUE);
 	enable_interrupts(GLOBAL);
@@ -503,14 +498,9 @@ void main(void) {
 	disable_interrupts(INT_TIMER3);
 	output_high(LCD_BACKLIGHT);
 
-	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
-		/* start 10mS timer */
-		enable_interrupts(INT_TIMER1);
-		enable_interrupts(INT_EXT);
-	} else {
-		/* start 100uS timer */
-		enable_interrupts(INT_TIMER2);
-	}
+
+	/* start 100uS timer */
+	enable_interrupts(INT_TIMER2);
 
 	
 	/* main loop */
@@ -556,7 +546,6 @@ void main(void) {
 			screen_select();
 		}
 
-		/* this one seems to crash it */
 		if ( action.now_log ) {
 			action.now_log=0;
 			log_now();

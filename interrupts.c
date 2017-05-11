@@ -31,46 +31,12 @@ void isr_10ms_boot(void) {
 	}
 }
 
-#int_ext
-void isr_anemometer_theis(void) {
-	timers.anemometer_count++;
-	current.anemometer_count++;
-}
-
-#int_timer1 HIGH
-/* this timer only runs once booted and anemometer type is THEIS */
-void isr_10ms_theis(void) {
-	static int8 tick=0;
-
-	/* preload so we expire in 10 milliseconds */
-	set_timer1(25536);
-
-	/* signal main to do periodic activities */
-	action.now_10millisecond=1;
-
-	tick++;
-	if ( 100 == tick ) {
-		/* anemometer frequency in Hz (for wind speed) */
-		current.anemometer_f=timers.anemometer_count;
-
-		/* reset Hz counter */
-		timers.anemometer_count=0;
-		/* live_send() resets current.pulse_count which is the pulses in 10 seconds */
-		
-		/* (for wind gust) */
-		if ( current.anemometer_f > current.anemometer_f_max ) {
-			current.anemometer_f_max = current.anemometer_f;
-		}
-		
-
-		tick=0;
-	}
-}
 
 #int_timer2 HIGH
 /* this timer only runs once booted and anemometer type isn't THEIS */
 void isr_100us(void) {
 	static int8 tick=0;
+	static int16 tock=0;
 
 	/* anemometer polling state variables */
 	/* anemometer 0 / PIN_B0 */
@@ -78,6 +44,44 @@ void isr_100us(void) {
 	short ext0_now;
 	static short ext0_last=0;
 	static short ext0_state=0;
+
+	/* every 100 cycles we tell main() loop to do 10 milisecond activities */
+	tick++;
+	if ( 100 == tick ) {
+		tick=0;
+		action.now_10millisecond=1;
+	}
+	
+
+	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+		ext0_now=input(PIN_B0);
+		if ( 0 == ext0_now && 1 == ext0_last ) {
+			timers.anemometer_count++;
+			current.anemometer_count++;
+		}
+		ext0_last = ext0_now;
+
+
+		/* every 10000 cycles we export anemometer frequency */
+		tock++;
+		if ( 10000 == tock ) {
+			tock=0;
+
+			/* anemometer frequency in Hz (for wind speed) */
+			current.anemometer_f=timers.anemometer_count;
+
+			/* reset Hz counter */
+			timers.anemometer_count=0;
+			/* live_send() resets current.anemometer_count which is the pulses in 10 seconds */
+		
+			/* (for wind gust) */
+			if ( current.anemometer_f > current.anemometer_f_max ) {
+				current.anemometer_f_max = current.anemometer_f;
+			}		
+		}
+
+		return;
+	}
 
 
 	/* count time between falling edges */
@@ -106,12 +110,7 @@ void isr_100us(void) {
 	}
 	ext0_last = ext0_now;
 
-	/* every 100 cycles we tell main() loop to do 10 milisecond activities */
-	tick++;
-	if ( 100 == tick ) {
-		tick=0;
-		action.now_10millisecond=1;
-	}
+
 }
 
 

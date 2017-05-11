@@ -1,3 +1,5 @@
+
+
 void live_send(void) {
 	int8 buff[15];
 	int16 lCRC;
@@ -29,6 +31,18 @@ CRC LSB         14 low byte of CRC
 	buff[3]=current.serial_lsb;
 	buff[4]=15; /* packet length */
 	buff[5]=0x07; /* packet type */
+
+	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+		/* scale Theis anemometer frequency to #40HC recipricol frequency */
+		current.pulse_period=anemometer_theis_to_40HC(current.anemometer_f);
+		current.pulse_min_period=anemometer_theis_to_40HC(current.anemometer_f_max);
+		current.pulse_count=current.anemometer_count;
+
+		/* reset gust and counts in 10 seconds BUG TODO */
+		current.anemometer_f_max=0;
+		current.anemometer_count=0;
+	} 
+	
 	buff[6]=make8(current.pulse_period,1); /* wind speed */
 	buff[7]=make8(current.pulse_period,0);
 	buff[8]=make8(current.pulse_min_period,1); /* wind gust */
