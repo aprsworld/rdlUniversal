@@ -2,15 +2,12 @@
 
 typedef struct {
 	/* most recent valid */
-	/* #40HC anemometer measure pulse period */
-	int16 pulse_period;
-	int16 pulse_min_period;
-	int16 pulse_count;
+	int16 pulse_period;     /* period for #40HC or frequency (Hz) for Theis */
+	int16 pulse_min_period; /* period for #40HC or frequency (Hz) for Theis */
 
-	/* THEIS anemometer measures frequency */
-	int16 anemometer_f;
-	int16 anemometer_f_max; /* reset in live_send() */
-	int16 anemometer_count; /* resets in live_send() */
+	int16 pulse_count_log;  /* reset in log routine */
+	int16 pulse_count_live; /* reset in live routine */
+
 
 	int16 input_voltage_adc;
 	int8 wind_direction_sector;
@@ -76,8 +73,7 @@ typedef struct {
 	int8 live_seconds;
 
 	int16 pulse_period;
-	int16 pulse_count;
-	int16 anemometer_count;
+	int16 pulse_count; /* used in frequency counting interrupt to count pulses in second */
 } struct_time_keep;
 
 typedef struct {
@@ -196,12 +192,10 @@ void basicInit() {
 
 	current.pulse_period=0;
 	current.pulse_min_period=65535;
-	current.pulse_count=0;
+	current.pulse_count_live=0;
+	current.pulse_count_log=0;
 
-	current.anemometer_f=0;
-	current.anemometer_f_max=0;
-	current.anemometer_count=0;
-	timers.anemometer_count=0;
+	timers.pulse_count=0;
 
 
 	/* get our compiled date from constant */

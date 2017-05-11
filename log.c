@@ -192,12 +192,12 @@ void log_now(void) {
 	disable_interrupts(INT_TIMER2);
 	pulse_period = current.pulse_period;
 	pulse_min_period = current.pulse_min_period;
-	pulse_count = current.pulse_count;
+	pulse_count = current.pulse_count_log;
 
 	/* reset our current record */
 	current.pulse_period=0;
 	current.pulse_min_period=0xffff;
-	current.pulse_count=0;
+	current.pulse_count_log=0;
 	enable_interrupts(INT_TIMER2);
 
 	/* binary */
@@ -215,8 +215,6 @@ void log_now(void) {
 	buff_binary[10]=make8(pulse_count,0);
 	buff_binary[11]=(current.battery_charge<<4) + (current.wind_direction_sector & 0x0F); /* battery % full, wind direction sector */
 
-	/* hex for storage to internal memory */
-//	sprintf(buff_hex,"%02x%02x%02x%02x%02x%04Lx%04Lx%04Lx%02x",timers.year,timers.month,timers.day,timers.hour,timers.minute, pulse_period, pulse_min_period, pulse_count,current.input_voltage_adc>>2);
 	/* decimal for human readability and for mmcDaughter */
 	sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u,%lu,%lu,%lu,%lu,%u,%0.5lf,%0.5lf,%u,%u,%u,%lu,%lu\n",
 		timers.year, 

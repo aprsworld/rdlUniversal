@@ -56,8 +56,9 @@ void isr_100us(void) {
 	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
 		ext0_now=input(PIN_B0);
 		if ( 0 == ext0_now && 1 == ext0_last ) {
-			timers.anemometer_count++;
-			current.anemometer_count++;
+			timers.pulse_count++;
+			current.pulse_count_live++;
+			current.pulse_count_log++;
 		}
 		ext0_last = ext0_now;
 
@@ -68,15 +69,15 @@ void isr_100us(void) {
 			tock=0;
 
 			/* anemometer frequency in Hz (for wind speed) */
-			current.anemometer_f=timers.anemometer_count;
+			current.pulse_period=timers.pulse_count;
 
 			/* reset Hz counter */
-			timers.anemometer_count=0;
+			timers.pulse_count=0;
 			/* live_send() resets current.anemometer_count which is the pulses in 10 seconds */
 		
 			/* (for wind gust) */
-			if ( current.anemometer_f > current.anemometer_f_max ) {
-				current.anemometer_f_max = current.anemometer_f;
+			if ( current.pulse_period > current.pulse_min_period ||  65535 == current.pulse_min_period ) {
+				current.pulse_min_period = current.pulse_period;
 			}		
 		}
 
@@ -91,7 +92,8 @@ void isr_100us(void) {
 	/* anemometer 0 / PIN_B0 trigger on falling edge */
 	ext0_now=input(PIN_B0);
 	if ( 0 == ext0_now && 1 == ext0_last ) {
-		current.pulse_count++;
+		current.pulse_count_live++;
+		current.pulse_count_log++;
 		if ( 1 == ext0_state ) {
 			/* currently counting, time to finish */
 			ext0_count=0;

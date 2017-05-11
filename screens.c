@@ -90,11 +90,11 @@ void screen_wind_direction(void) {
 
 void screen_t(void) {
 	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
-		printf(lcd_putch,"%lu",current.anemometer_f);
+		printf(lcd_putch,"%lu",current.pulse_period);
 		lcd_goto(LCD_LINE_ONE+6);
-		printf(lcd_putch,"%lu",current.anemometer_f_max);
+		printf(lcd_putch,"%lu",current.pulse_min_period);
 		lcd_goto(LCD_LINE_ONE+12);
-		printf(lcd_putch,"%lu",current.anemometer_count);
+		printf(lcd_putch,"%lu",current.pulse_count_live);
 		
 		lcd_goto(LCD_LINE_TWO);
 		printf(lcd_putch,"F(Hz) FMax  Cnt");
@@ -106,7 +106,7 @@ void screen_t(void) {
 		lcd_goto(LCD_LINE_ONE+6);
 		printf(lcd_putch,"%05lu",current.pulse_min_period);
 		lcd_goto(LCD_LINE_ONE+12);
-		printf(lcd_putch,"%04lu",current.pulse_count);
+		printf(lcd_putch,"%04lu",current.pulse_count_live);
 		
 		lcd_goto(LCD_LINE_TWO);
 		
@@ -121,45 +121,30 @@ void screen_time_date(void) {
 }
 
 void screen_wind(void) {
-	float ws;
-	float wg;
+	float f;
 
 	if ( ANEMOMETER_TYPE_40HC == current.anemometer_type ) {
 		if ( current.pulse_period>0 && current.pulse_period<65535 ) {
-			ws = 7650.0 / current.pulse_period + 0.35;
+			f = 7650.0 / current.pulse_period + 0.35;
+		} else {
+			f = -1.0;
 		}
+		printf(lcd_putch,"Speed: %02.1f m/s",f);
+
 		if ( current.pulse_min_period>0 && current.pulse_min_period<65535 ) {
-			wg = 7650.0 / current.pulse_min_period + 0.35;
+			f = 7650.0 / current.pulse_min_period + 0.35;
+		} else { 
+			f = -1.0;
 		}
+
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"Gust:  %02.1f m/s",f);
+
 	} else if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
-		/* if THEIS anemometer, current.pulse_period is in Hz */
-		if ( current.anemometer_f > 0 ) {
-			ws = 0.04598 * current.anemometer_f + 0.24786;
-		} else {
-			ws = 0.0;
-		}
-
-		if ( current.anemometer_f_max > 0 ) {
-			wg = 0.04598 * current.anemometer_f_max + 0.24786;
-		} else {
-			wg = 0.0;
-		}
-
-	} else {
-		ws=-1.0;
-		wg=-1.0;
-	}
-
-//	printf(lcd_putch,"%02.1f %02.1f %05lu",ws,wg,current.pulse_count[0]);
-//                    0123456789012345
-//                    12.3 m/s 45.6 m/s
-	printf(lcd_putch,"Speed: %02.1f m/s",ws);
-	lcd_goto(LCD_LINE_TWO);
-	printf(lcd_putch,"Gust:  %02.1f m/s",wg);
-	
-//                    0123456789012345
-//                    12.3 45.6  65535
-//	printf(lcd_putch,"WS   WG    WC");
+		printf(lcd_putch,"Speed: %04.1w m/s",anemometer_theis_to_ws(current.pulse_period));
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"Gust:  %04.1w m/s",anemometer_theis_to_ws(current.pulse_min_period));
+	} 
 }
 
 void prompt_prev_set_next(void) {

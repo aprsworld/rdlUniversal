@@ -4,6 +4,20 @@ void live_send(void) {
 	int8 buff[15];
 	int16 lCRC;
 	int8 i;
+	int16 l;
+	/* local copy of current */
+	int16 pulse_period,pulse_min_period,pulse_count;
+
+	/* shut off main timer so we don't change while we copy */
+	disable_interrupts(INT_TIMER2);
+	pulse_period = current.pulse_period;
+	pulse_min_period = current.pulse_min_period;
+	pulse_count = current.pulse_count_live;
+
+	/* reset our current record */
+	current.pulse_count_live=0;
+	enable_interrupts(INT_TIMER2);
+
 /* 
 '#'             0  STX
 UNIT ID PREFIX  1  First character (A-Z) for serial number
@@ -34,22 +48,23 @@ CRC LSB         14 low byte of CRC
 
 	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
 		/* scale Theis anemometer frequency to #40HC recipricol frequency */
-		current.pulse_period=anemometer_theis_to_40HC(current.anemometer_f);
-		current.pulse_min_period=anemometer_theis_to_40HC(current.anemometer_f_max);
-		current.pulse_count=current.anemometer_count;
+		l=anemometer_theis_to_40HC(pulse_period);
+		buff[6]=make8(l,1); /* wind speed */
+		buff[7]=make8(l,0);
 
-		/* reset gust and counts in 10 seconds BUG TODO */
-		current.anemometer_f_max=0;
-		current.anemometer_count=0;
-	} 
-	
-	buff[6]=make8(current.pulse_period,1); /* wind speed */
-	buff[7]=make8(current.pulse_period,0);
-	buff[8]=make8(current.pulse_min_period,1); /* wind gust */
-	buff[9]=make8(current.pulse_min_period,0); 
+		l=anemometer_theis_to_40HC(pulse_min_period);
+		buff[8]=make8(l,1); /* wind gust */
+		buff[9]=make8(l,0);
+
+	} else {
+		buff[6]=make8(pulse_period,1); /* wind speed */
+		buff[7]=make8(pulse_period,0);
+		buff[8]=make8(pulse_min_period,1); /* wind gust */
+		buff[9]=make8(pulse_min_period,0); 
+	}
 	buff[10]=(current.battery_charge<<4) + (current.wind_direction_sector & 0x0F); /* battery % full, wind direction sector */
-	buff[11]=make8(current.pulse_count,1); /* wind pulse count */
-	buff[12]=make8(current.pulse_count,0); 
+	buff[11]=make8(pulse_count,1); /* wind pulse count */
+	buff[12]=make8(pulse_count,0); 
 
 	lCRC=crc_chk(buff+1,12);
 	buff[13]=make8(lCRC,1);
@@ -161,8 +176,8 @@ void live_send_status(void) {
 	buff[7]=make8(current.pulse_period,0);
 	buff[8]=make8(current.pulse_min_period,1); /* wind gust */
 	buff[9]=make8(current.pulse_min_period,0); 
-	buff[10]=make8(current.pulse_count,1); /* wind pulse count */
-	buff[11]=make8(current.pulse_count,0); 
+	buff[10]=make8(current.pulse_count_live,1); /* wind pulse count */
+	buff[11]=make8(current.pulse_count_live,0); 
 
 	buff[12]=timers.year;
 	buff[13]=timers.month;
