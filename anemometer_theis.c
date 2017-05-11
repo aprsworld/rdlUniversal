@@ -1213,7 +1213,7 @@ int16 anemometer_theis_to_40HC(int16 frequency) {
 
 #define HZ_TO_WS_MAX 1200
 const int16 hz_to_ws[] = {
-	    2, /* inHz=   0, windSpeed=0.2 */
+	    0, /* inHz=   0, windSpeed=0.2 (force to zero) */
 	    3, /* inHz=   1, windSpeed=0.3 */
 	    3, /* inHz=   2, windSpeed=0.3 */
 	    4, /* inHz=   3, windSpeed=0.4 */

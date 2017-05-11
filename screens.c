@@ -1,7 +1,7 @@
 void screen_download(void) {
-	printf(lcd_putch,"Page Req:%05lu",log.page_requested);
+	printf(lcd_putch,"Page Req: %05lu",log.page_requested);
 	lcd_goto(LCD_LINE_TWO);
-	printf(lcd_putch," N Pages:%05lu",log.n_pages);
+	printf(lcd_putch," N Pages: %05lu",log.n_pages);
 }
 
 void screen_uptime(void) {
@@ -52,7 +52,7 @@ void screen_sd(void) {
 }
 
 void screen_dataflash(void) {
-	printf(lcd_putch,"Internal Memory");
+	printf(lcd_putch,"Internal Memory:");
 	lcd_goto(LCD_LINE_TWO);
 	printf(lcd_putch,"%lu/%lu full",make16(read_ext_fram(FRAM_ADDR_DATAFLASH_PAGE+0),read_ext_fram(FRAM_ADDR_DATAFLASH_PAGE+1)),DATAFLASH_PAGES);
 }
@@ -118,6 +118,13 @@ void screen_time_date(void) {
 	printf(lcd_putch,"Date: 20%02u-%02u-%02u",timers.year,timers.month,timers.day);
 	lcd_goto(LCD_LINE_TWO);
 	printf(lcd_putch,"Now %02u:%02u:%02u UTC",timers.hour,timers.minute,timers.second);
+}
+
+void screen_version(void) {
+	printf(lcd_putch,"Firmware Version:");
+//                    0123456789012345
+	lcd_goto(LCD_LINE_TWO);
+	printf(lcd_putch,"%s  %s",__DATE__,__TIME__);
 }
 
 void screen_wind(void) {
@@ -191,6 +198,7 @@ void screen_set_serial(short reset) {
 	serial_prefix=read_eeprom(EE_SERIAL_PREFIX);
 	serial=make16(read_eeprom(EE_SERIAL_MSB),read_eeprom(EE_SERIAL_LSB));
 
+	action.select_now=action.up_now=action.down_now=0;
 
 	for ( ; ; ) {
 		lcd_goto(LCD_LINE_ONE);
@@ -550,7 +558,7 @@ short screen_set_time(void) {
 
 
 
-#define MAX_SCREEN_RDLOGGER     10
+#define MAX_SCREEN_RDLOGGER     11
 void screen_select(void) {
 	static int8 screen;
 	static short has_buttons=0;
@@ -593,6 +601,7 @@ void screen_select(void) {
 			case 8:  has_buttons=screen_set_date();  break;
 			case 9:  has_buttons=screen_set_time(); break;
 			case 10: screen_download(); has_buttons=0; break;
+			case 11: screen_version(); has_buttons=0; break;
 		}
 
 }
