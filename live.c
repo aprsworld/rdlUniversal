@@ -46,13 +46,13 @@ CRC LSB         14 low byte of CRC
 	buff[4]=15; /* packet length */
 	buff[5]=0x07; /* packet type */
 
-	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
-		/* scale Theis anemometer frequency to #40HC recipricol frequency */
-		l=anemometer_theis_to_40HC(pulse_period);
+	if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
+		/* scale Thies anemometer frequency to #40HC recipricol frequency */
+		l=anemometer_thies_to_40HC(pulse_period);
 		buff[6]=make8(l,1); /* wind speed */
 		buff[7]=make8(l,0);
 
-		l=anemometer_theis_to_40HC(pulse_min_period);
+		l=anemometer_thies_to_40HC(pulse_min_period);
 		buff[8]=make8(l,1); /* wind gust */
 		buff[9]=make8(l,0);
 

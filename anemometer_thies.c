@@ -1204,7 +1204,7 @@ const int16 hz_to_40hc_OTA[] = {
 	  139  /* inHz=1200, windSpeed=55.4, outHz=72.0 */
 };
 
-int16 anemometer_theis_to_40HC(int16 frequency) {
+int16 anemometer_thies_to_40HC(int16 frequency) {
 	if ( frequency > HZ_TO_40HC_OTA_MAX )
 		return 65535;
 
@@ -2416,7 +2416,7 @@ const int16 hz_to_ws[] = {
 	  554  /* inHz=1200, windSpeed=55.4 */
 };
 
-int16 anemometer_theis_to_ws(int16 frequency) {
+int16 anemometer_thies_to_ws(int16 frequency) {
 	if ( frequency > HZ_TO_WS_MAX )
 		return 0;
 

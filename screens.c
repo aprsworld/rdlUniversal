@@ -89,7 +89,7 @@ void screen_wind_direction(void) {
 }
 
 void screen_t(void) {
-	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+	if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
 		printf(lcd_putch,"%lu",current.pulse_period);
 		lcd_goto(LCD_LINE_ONE+6);
 		printf(lcd_putch,"%lu",current.pulse_min_period);
@@ -147,10 +147,10 @@ void screen_wind(void) {
 		lcd_goto(LCD_LINE_TWO);
 		printf(lcd_putch,"Gust:  %02.1f m/s",f);
 
-	} else if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
-		printf(lcd_putch,"Speed: %04.1w m/s",anemometer_theis_to_ws(current.pulse_period));
+	} else if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
+		printf(lcd_putch,"Speed: %04.1w m/s",anemometer_thies_to_ws(current.pulse_period));
 		lcd_goto(LCD_LINE_TWO);
-		printf(lcd_putch,"Gust:  %04.1w m/s",anemometer_theis_to_ws(current.pulse_min_period));
+		printf(lcd_putch,"Gust:  %04.1w m/s",anemometer_thies_to_ws(current.pulse_min_period));
 	} 
 }
 
@@ -293,7 +293,7 @@ void screen_set_serial(short reset) {
 		lcd_goto(LCD_LINE_ONE);
 		printf(lcd_putch," - ANEMO TYPE - ");
 		lcd_goto(LCD_LINE_TWO);
-		printf(lcd_putch,"#40HC      THEIS");
+		printf(lcd_putch,"#40HC      THIES");
 //                        0123456789012345
 
 		if ( action.select_now ) {
@@ -302,7 +302,7 @@ void screen_set_serial(short reset) {
 
 		if ( action.up_now ) {
 			action.up_now=0;
-			antype=ANEMOMETER_TYPE_THEIS;
+			antype=ANEMOMETER_TYPE_THIES;
 			break;
 		}
 

@@ -33,7 +33,7 @@ void isr_10ms_boot(void) {
 
 
 #int_timer2 HIGH
-/* this timer only runs once booted and anemometer type isn't THEIS */
+/* this timer only runs once booted and anemometer type isn't THIES */
 void isr_100us(void) {
 	static int8 tick=0;
 	static int16 tock=0;
@@ -53,7 +53,7 @@ void isr_100us(void) {
 	}
 	
 
-	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
+	if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
 		ext0_now=input(PIN_B0);
 		if ( 0 == ext0_now && 1 == ext0_last ) {
 			timers.pulse_count++;

@@ -2,8 +2,8 @@
 
 typedef struct {
 	/* most recent valid */
-	int16 pulse_period;     /* period for #40HC or frequency (Hz) for Theis */
-	int16 pulse_min_period; /* period for #40HC or frequency (Hz) for Theis */
+	int16 pulse_period;     /* period for #40HC or frequency (Hz) for Thies */
+	int16 pulse_min_period; /* period for #40HC or frequency (Hz) for Thies */
 
 	int16 pulse_count_log;  /* reset in log routine */
 	int16 pulse_count_live; /* reset in live routine */
@@ -142,7 +142,7 @@ int16 crc_chk(int8 *data, int8 length) {
 /* declare routine called by timer0 ISR */
 void task_10millisecond(void);
 
-#include "anemometer_theis.c"
+#include "anemometer_thies.c"
 #include "interrupts.c"
 #include "wireless.c"
 #include "lcd.c"
@@ -286,7 +286,7 @@ void basicInit() {
 
 void serialNumberCheck(void) {
 	/* 	middle button sets serial number */
-	if ( 'R' != read_eeprom(EE_SERIAL_PREFIX) || read_eeprom(EE_HW_TYPE) > HARDWARE_TYPE_RDLOGGERUNIVERSAL || read_eeprom(EE_ANEMOMETER_TYPE) > ANEMOMETER_TYPE_THEIS ) {
+	if ( 'R' != read_eeprom(EE_SERIAL_PREFIX) || read_eeprom(EE_HW_TYPE) > HARDWARE_TYPE_RDLOGGERUNIVERSAL || read_eeprom(EE_ANEMOMETER_TYPE) > ANEMOMETER_TYPE_THIES ) {
 		screen_set_serial(1);
 	} else if ( 0==action.up_now && 1==action.select_now && 0==action.down_now ) {
 		action.select_now=0;
@@ -309,8 +309,8 @@ void startupCountdown() {
 
 	if ( ANEMOMETER_TYPE_40HC == current.anemometer_type ) {
 		printf(lcd_putch," #40HC");
-	} else if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
-		printf(lcd_putch," THEIS");
+	} else if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
+		printf(lcd_putch," THIES");
 	} else {
 		printf(lcd_putch," UNKNOWN");
 	}

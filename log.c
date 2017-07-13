@@ -209,13 +209,13 @@ void log_now(void) {
 	buff_binary[4]=timers.minute;
 
 
-	if ( ANEMOMETER_TYPE_THEIS == current.anemometer_type ) {
-		/* scale Theis anemometer frequency to #40HC recipricol frequency */
-		l=anemometer_theis_to_40HC(pulse_period);
+	if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
+		/* scale Thies anemometer frequency to #40HC recipricol frequency */
+		l=anemometer_thies_to_40HC(pulse_period);
 		buff_binary[5]=make8(l,1); /* wind speed */
 		buff_binary[6]=make8(l,0);
 
-		l=anemometer_theis_to_40HC(pulse_min_period);
+		l=anemometer_thies_to_40HC(pulse_min_period);
 		buff_binary[7]=make8(l,1); /* wind gust */
 		buff_binary[8]=make8(l,0);
 
