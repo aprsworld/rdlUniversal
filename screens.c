@@ -39,9 +39,10 @@ void screen_sd(void) {
 	printf(lcd_putch,"SD Card Status:");
 	lcd_goto(LCD_LINE_TWO);
 	if ( ! input(MMC_STATUS_TO_HOST) ) {
-		printf(lcd_putch,"    Logging");
+		printf(lcd_putch,"Logging (%d sec)",current.sd_log_rate);
+//                        0123456789012345
 	} else {
-		printf(lcd_putch,"   Not Ready!");
+		printf(lcd_putch,"Not Ready! (%d)",current.sd_log_rate);
 	}
 
 
