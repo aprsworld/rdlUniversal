@@ -26,6 +26,7 @@
 #define EE_SERIAL_LSB      0x12
 #define EE_HW_TYPE         0x13
 #define EE_ANEMOMETER_TYPE 0x14
+#define EE_SD_LOG_RATE     0x15
 
 //#define ANEMOMETER_TIMEOUT 2000
 #define MODEM_TIMEOUT_SECONDS 240
@@ -66,13 +67,15 @@
 #define DATAFLASH_SO       PIN_D5
 #define DATAFLASH_SCK      PIN_D6
 
+/* status LEDs (present on rdLoggerUniversalXTC */
+#define LED_LOGGING        PIN_B2
+#define LED_WIRELESS       PIN_B3
+#define LED_ANEMOMETER     PIN_D7
+
 /* SD daughter board */
 #define MMC_STATUS_TO_HOST PIN_E1
 #define MMC_STATUS_TO_SD   PIN_E0
 
-/* UART for GPS receive and SD Daughter */
-#define UART_RESET         PIN_C5
-#define UART_IRQ           PIN_B3
 
 /* GPS */
 #define GPS_EN             PIN_E6
@@ -93,3 +96,6 @@
 
 #define ANEMOMETER_TYPE_40HC  0
 #define ANEMOMETER_TYPE_THIES 1
+
+#define SD_LOG_RATE_60 0
+#define SD_LOG_RATE_10 1

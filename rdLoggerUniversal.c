@@ -21,6 +21,7 @@ typedef struct {
 	int16 uptime;
 	int8 hardware_type;
 	int8 anemometer_type;
+	int8 sd_log_rate;
 } struct_current;
 
 
@@ -250,6 +251,7 @@ void basicInit() {
 
 	current.hardware_type=read_eeprom(EE_HW_TYPE);
 	current.anemometer_type=read_eeprom(EE_ANEMOMETER_TYPE);
+	current.sd_log_rate=read_eeprom(EE_SD_LOG_RATE);
 
 	log.page_requested=65535;
 
@@ -388,6 +390,29 @@ void task_second(void) {
 			action.now_live_status=1;
 		}
 	}
+
+	/* status LEDs on rdLoggerUniversalXTC */
+	/* Logging LED shows if SD card is LOGGING */
+	if ( ! input(MMC_STATUS_TO_HOST) ) {
+		output_high(LED_LOGGING);
+	} else {
+		output_low(LED_LOGGING);
+	}
+	/* Wireless LED shows if Wireless modem is ON */
+	if ( 0 != timers.modem_seconds ) {
+		output_high(LED_WIRELESS);
+	} else {
+		output_low(LED_WIRELESS);
+	}
+
+	/* Anemometer LED shows if pulse count is > 0 */
+	if ( current.pulse_count_live > 0 ) {
+		output_high(LED_ANEMOMETER);
+	} else {
+		output_low(LED_ANEMOMETER);
+	}
+
+
 }
 
 
