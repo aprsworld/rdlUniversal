@@ -2,6 +2,7 @@
 
 void live_send(void) {
 	int8 buff[15];
+	int8 buff_decimal[256]; /* to SD card and debugging */
 	int16 lCRC;
 	int8 i;
 	int16 l;
@@ -70,13 +71,40 @@ CRC LSB         14 low byte of CRC
 	buff[13]=make8(lCRC,1);
 	buff[14]=make8(lCRC,0);
 
-
+	/* send to wireless modem */
 	for ( i=0 ; i<sizeof(buff) ; i++ ) {
 		/* xbee modem */
 		fputc(buff[i],stream_wireless);
 	}	
 
 	/* modem will automatically shut off when countdown done */
+
+
+	if ( SD_LOG_RATE_10 == current.sd_log_rate ) {
+		/* write to SD card */
+		/* decimal for human readability and for mmcDaughter */
+		sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u,%lu,%lu,%lu,%lu,%u,%lu,%c%lu\n",
+			timers.year, 
+			timers.month, 
+			timers.day, 
+			timers.hour, 
+			timers.minute, 
+			pulse_period, 
+			pulse_min_period, 
+			pulse_count, 
+			current.input_voltage_adc,
+			current.wind_direction_sector,
+			current.uptime,
+			current.serial_prefix,
+			make16(current.serial_msb,current.serial_lsb)
+		);
+
+		for ( i=0 ; i<strlen(buff_decimal) ; i++ ) {
+			/* rdLogger via builtin UART2 */
+			fputc(buff_decimal[i],stream_sd);
+			delay_ms(1);
+		}
+	}
 
 
 

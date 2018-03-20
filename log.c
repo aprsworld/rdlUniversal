@@ -229,23 +229,6 @@ void log_now(void) {
 	buff_binary[9]=make8(pulse_count,1);
 	buff_binary[10]=make8(pulse_count,0);
 	buff_binary[11]=(current.battery_charge<<4) + (current.wind_direction_sector & 0x0F); /* battery % full, wind direction sector */
-
-	/* decimal for human readability and for mmcDaughter */
-	sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u,%lu,%lu,%lu,%lu,%u,%lu,%c%lu\n",
-		timers.year, 
-		timers.month, 
-		timers.day, 
-		timers.hour, 
-		timers.minute, 
-		pulse_period, 
-		pulse_min_period, 
-		pulse_count, 
-		current.input_voltage_adc,
-		current.wind_direction_sector,
-		current.uptime,
-		current.serial_prefix,
-		make16(current.serial_msb,current.serial_lsb)
-	);
 	
 	/* debugging */
 //	fprintf(modem,"# logging  internal: %s\r\n",buff_hex);
@@ -258,11 +241,32 @@ void log_now(void) {
 
 	/* write to dataflash */
 	write_record(buff_binary);
-	/* write to SD card */
-	for ( i=0 ; i<strlen(buff_decimal) ; i++ ) {
-		/* rdLogger via builtin UART2 */
-		fputc(buff_decimal[i],stream_sd);
-		delay_ms(1);
+
+
+	if ( SD_LOG_RATE_10 != current.sd_log_rate ) {
+		/* write to SD card */
+		/* decimal for human readability and for mmcDaughter */
+		sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u,%lu,%lu,%lu,%lu,%u,%lu,%c%lu\n",
+			timers.year, 
+			timers.month, 
+			timers.day, 
+			timers.hour, 
+			timers.minute, 
+			pulse_period, 
+			pulse_min_period, 
+			pulse_count, 
+			current.input_voltage_adc,
+			current.wind_direction_sector,
+			current.uptime,
+			current.serial_prefix,
+			make16(current.serial_msb,current.serial_lsb)
+		);
+
+		for ( i=0 ; i<strlen(buff_decimal) ; i++ ) {
+			/* rdLogger via builtin UART2 */
+			fputc(buff_decimal[i],stream_sd);
+			delay_ms(1);
+		}
 	}
 
 }
