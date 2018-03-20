@@ -83,12 +83,13 @@ CRC LSB         14 low byte of CRC
 	if ( SD_LOG_RATE_10 == current.sd_log_rate ) {
 		/* write to SD card */
 		/* decimal for human readability and for mmcDaughter */
-		sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u,%lu,%lu,%lu,%lu,%u,%lu,%c%lu\n",
+		sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u:%02u,%lu,%lu,%lu,%lu,%u,%lu,%c%lu\n",
 			timers.year, 
 			timers.month, 
 			timers.day, 
 			timers.hour, 
 			timers.minute, 
+			timers.second,  /* only present in 10 second SD logged */
 			pulse_period, 
 			pulse_min_period, 
 			pulse_count, 
