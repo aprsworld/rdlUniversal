@@ -180,6 +180,7 @@ void screen_set_serial(short reset) {
 	int16 serial;
 	int8 hwtype;
 	int8 antype;
+	int8 sdrate;
 
 	if ( reset ) {
 		write_eeprom(EE_SERIAL_PREFIX,'R');
@@ -187,6 +188,7 @@ void screen_set_serial(short reset) {
 		write_eeprom(EE_SERIAL_LSB,0x00);
 		write_eeprom(EE_HW_TYPE,HARDWARE_TYPE_RDLOGGERUNIVERSAL);
 		write_eeprom(EE_ANEMOMETER_TYPE,ANEMOMETER_TYPE_40HC);
+		write_eeprom(EE_SD_LOG_RATE,SD_LOG_RATE_60);
 
 
 		lcd_clear();
@@ -330,6 +332,48 @@ void screen_set_serial(short reset) {
 	lcd_clear();
 
 
+
+	/* SD card log interval */
+	for ( ; ; ) {
+
+		lcd_goto(LCD_LINE_ONE);
+		printf(lcd_putch," - SD LOG RATE - ");
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"60 sec    10 sec");
+//                        0123456789012345
+
+		if ( action.select_now ) {
+			action.select_now=0;
+		}
+
+		if ( action.up_now ) {
+			action.up_now=0;
+			sdrate=SD_LOG_RATE_10;
+			break;
+		}
+
+		if ( action.down_now ) {
+			action.down_now=0;
+			sdrate=SD_LOG_RATE_60;
+			break;
+		}
+
+		delay_ms(20);
+		restart_wdt();
+	}
+
+
+	/* write the new hardware type */
+	write_eeprom(EE_SD_LOG_RATE,sdrate);
+
+	/* read it back out */
+	current.sd_log_rate=read_eeprom(EE_SD_LOG_RATE);
+
+
+	lcd_clear();
+	lcd_putch("Wrote SD rate");
+	delay_ms(1000);
+	lcd_clear();
 
 }
 
