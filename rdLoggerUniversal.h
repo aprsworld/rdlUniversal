@@ -68,9 +68,9 @@
 #define DATAFLASH_SCK      PIN_D6
 
 /* status LEDs (present on rdLoggerUniversalXTC */
-#define LED_LOGGING        PIN_B2
-#define LED_WIRELESS       PIN_B3
-#define LED_ANEMOMETER     PIN_D7
+#define LED_LOGGING        PIN_B2 /* green */
+#define LED_WIRELESS       PIN_B3 /* red */
+#define LED_ANEMOMETER     PIN_D7 /* orange */
 
 /* SD daughter board */
 #define MMC_STATUS_TO_HOST PIN_E1

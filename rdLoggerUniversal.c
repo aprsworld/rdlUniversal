@@ -300,6 +300,10 @@ void startupCountdown() {
 	int8 i=0;
 	int16 serial;
 
+	output_high(LED_LOGGING);
+	output_high(LED_WIRELESS);
+	output_high(LED_ANEMOMETER);
+
 	wirelessOn(20);
 
 	if ( HARDWARE_TYPE_RDLOGGER == current.hardware_type )
@@ -398,12 +402,6 @@ void task_second(void) {
 	} else {
 		output_low(LED_LOGGING);
 	}
-	/* Wireless LED shows if Wireless modem is ON */
-	if ( 0 != timers.modem_seconds ) {
-		output_high(LED_WIRELESS);
-	} else {
-		output_low(LED_WIRELESS);
-	}
 
 	/* Anemometer LED shows if pulse count is > 0 */
 	if ( current.pulse_count_live > 0 ) {
@@ -467,6 +465,14 @@ void task_10millisecond(void) {
 		action.now_redraw=1;
 		timers.backlight_seconds=BACKLIGHT_TIMEOUT_SECONDS;
 	}
+
+	/* Wireless LED shows if Wireless modem is ON */
+	if ( 0 != timers.modem_seconds ) {
+		output_high(LED_WIRELESS);
+	} else {
+		output_low(LED_WIRELESS);
+	}
+
 }
 
 
