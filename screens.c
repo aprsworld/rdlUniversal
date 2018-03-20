@@ -134,14 +134,14 @@ void screen_wind(void) {
 		if ( current.pulse_period>0 && current.pulse_period<65535 ) {
 			f = 7650.0 / current.pulse_period + 0.35;
 		} else {
-			f = -1.0;
+			f = 0.0;
 		}
 		printf(lcd_putch,"Speed: %02.1f m/s",f);
 
 		if ( current.pulse_min_period>0 && current.pulse_min_period<65535 ) {
 			f = 7650.0 / current.pulse_min_period + 0.35;
 		} else { 
-			f = -1.0;
+			f = 0.0;
 		}
 
 		lcd_goto(LCD_LINE_TWO);
