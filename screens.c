@@ -185,12 +185,69 @@ void prompt_prev_enter_next(void) {
 	printf(lcd_putch,"Prev Enter  Next");
 }
 
+short screen_get_int16() {
+	char n_str[6];
+
+	sprintf(n_str,"%05lu",keypad.value);
+
+//	printf("current position value=%u field=%u\r\n",n_str[keypad.field]-'0',keypad.field);
+
+	/* print bottom line */
+	prompt_minus_set_plus();
+
+
+	/* print our value */
+	lcd_goto(keypad.start_pos);
+	printf(lcd_putch,"%s",n_str);
+	/* put cursor on field being changed */
+	lcd_goto(keypad.field + keypad.start_pos);
+	lcd_cursor(LCD_CURSOR_ON);
+	
+
+	if ( 1 == action.up_now ) {
+		action.up_now=0;
+
+		if ( '5'==n_str[keypad.field] && 0==keypad.field ) 
+			keypad.value -= 50000;
+		else if ( '9' == n_str[keypad.field] )
+			keypad.value -= int16_tens[keypad.field]*9;
+		else
+			keypad.value += int16_tens[keypad.field];
+
+		action.now_redraw=1;
+	}
+	if ( 1 == action.down_now ) {
+		action.down_now=0;
+		if ( '0'==n_str[keypad.field] && 0==keypad.field ) 
+			keypad.value += 50000;
+		else if ( '0' == n_str[keypad.field] ) 
+			keypad.value += int16_tens[keypad.field]*9;
+		else	
+			keypad.value -= int16_tens[keypad.field];
+
+		action.now_redraw=1;
+	}
+	if ( 1 == action.select_now ) {
+		action.select_now=0;
+		keypad.field++;
+		action.now_redraw=1;
+	}
+
+	if ( 5 == keypad.field ) {
+		lcd_cursor(LCD_CURSOR_OFF);
+		return 1;
+	}
+
+	return 0;
+}
+
 void screen_set_serial(short reset) {
 	int8 serial_prefix;
 	int16 serial;
 	int8 hwtype;
 	int8 antype;
 	int8 sdrate;
+	int16 last_serial_number;
 
 	if ( reset ) {
 		write_eeprom(EE_SERIAL_PREFIX,'R');
@@ -212,6 +269,39 @@ void screen_set_serial(short reset) {
 
 	action.select_now=action.up_now=action.down_now=0;
 
+#if 1
+	/* from sdLoggerThermok */
+	lcd_clear();
+
+	printf(lcd_putch,"Setting SN...");
+	delay_ms(2500);
+
+	/* set our values for next state */
+	keypad.value=serial; 
+	keypad.field=0;
+	keypad.start_pos=9;
+
+	last_serial_number=65535;
+
+#ignore_warnings 203
+	while ( 1 ) {
+#ignore_warnings NONE
+		restart_wdt();
+
+		if ( last_serial_number != keypad.value ) {
+			lcd_clear();
+			printf(lcd_putch,"Serial: %c",serial_prefix);
+			last_serial_number=keypad.value;
+		}
+
+		if ( screen_get_int16() ) {
+			serial=keypad.value;
+			break;
+		}
+	}
+
+#else
+	/* old style press press press press */
 	for ( ; ; ) {
 		lcd_goto(LCD_LINE_ONE);
 		printf(lcd_putch,"Serial: %c%lu     ",serial_prefix,serial);
@@ -237,6 +327,7 @@ void screen_set_serial(short reset) {
 		delay_ms(20);
 		restart_wdt();
 	}
+#endif
 
 
 	/* write the new serial number */

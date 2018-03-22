@@ -99,3 +99,5 @@
 
 #define SD_LOG_RATE_60 0
 #define SD_LOG_RATE_10 1
+
+const int16 int16_tens[]={10000,1000,100,10,1};

@@ -103,6 +103,13 @@ typedef struct {
 	int16 n_pages;
 } struct_log;
 
+typedef struct {
+	int16 value;
+	float fvalue;
+	int8 start_pos;
+	int8 field;
+} struct_keypad_input;
+
 /* global structures */
 struct_current current;
 struct_wireless wireless;
@@ -110,6 +117,7 @@ struct_action action;
 struct_time_keep timers;
 struct_gps_data gps;
 struct_log log;
+struct_keypad_input keypad;
 
 #byte port_a=0x0f80
 #byte port_b=0x0f81
