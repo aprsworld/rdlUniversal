@@ -63,7 +63,7 @@ CRC LSB         25 low byte of CRC
 		buff[2]=current.serial_msb;
 		buff[3]=current.serial_lsb;
 		buff[4]=26; /* packet length */
-		buff[5]=0x07; /* packet type */
+		buff[5]=36; /* packet type */
 
 		if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
 			/* scale Thies anemometer frequency to #40HC recipricol frequency */
