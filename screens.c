@@ -502,13 +502,13 @@ void screen_set_serial(short reset) {
 
 		if ( action.up_now ) {
 			action.up_now=0;
-			livetype=LIVE_TYPE_SHORT;
+			livetype=LIVE_TYPE_FULL;
 			break;
 		}
 
 		if ( action.down_now ) {
 			action.down_now=0;
-			livetype=LIVE_TYPE_FULL;
+			livetype=LIVE_TYPE_SHORT;
 			break;
 		}
 
