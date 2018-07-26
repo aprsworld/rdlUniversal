@@ -26,8 +26,8 @@ void live_send(void) {
 UNIT ID PREFIX  1  First character (A-Z) for serial number
 UNIT ID MSB     2  high byte of sending station ID
 UNIT ID LSB     3  low byte of sending station ID
-PACKET LENGTH   4  number of byte for packet including STX through CRC (TBD)
-PACKET TYPE     5  type of packet we are sending (TBD)
+PACKET LENGTH   4  number of byte for packet including STX through CRC (26)
+PACKET TYPE     5  type of packet we are sending (36)
 
 WS0 MSB         6  high byte of wind speed time
 WS0 LSB         7  low byte of wind speed time
