@@ -27,6 +27,7 @@
 #define EE_HW_TYPE         0x13
 #define EE_ANEMOMETER_TYPE 0x14
 #define EE_SD_LOG_RATE     0x15
+#define EE_LIVE_TYPE       0x16
 
 //#define ANEMOMETER_TIMEOUT 2000
 #define MODEM_TIMEOUT_SECONDS 240
@@ -99,5 +100,8 @@
 
 #define SD_LOG_RATE_60 0
 #define SD_LOG_RATE_10 1
+
+#define LIVE_TYPE_SHORT 0
+#define LIVE_TYPE_FULL  1
 
 const int16 int16_tens[]={10000,1000,100,10,1};

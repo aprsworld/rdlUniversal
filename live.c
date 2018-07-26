@@ -1,7 +1,7 @@
 
 
 void live_send(void) {
-	int8 buff[15];
+	int8 buff[32];
 	int8 buff_decimal[256]; /* to SD card and debugging */
 	int16 lCRC;
 	int8 i;
@@ -19,6 +19,90 @@ void live_send(void) {
 	current.pulse_count_live=0;
 	enable_interrupts(INT_TIMER2);
 
+
+	if ( LIVE_TYPE_FULL==current.live_type ) {
+/* 
+'#'             0  STX
+UNIT ID PREFIX  1  First character (A-Z) for serial number
+UNIT ID MSB     2  high byte of sending station ID
+UNIT ID LSB     3  low byte of sending station ID
+PACKET LENGTH   4  number of byte for packet including STX through CRC (TBD)
+PACKET TYPE     5  type of packet we are sending (TBD)
+
+WS0 MSB         6  high byte of wind speed time
+WS0 LSB         7  low byte of wind speed time
+WG0 MSB         8  high byte of wind gust time
+WG0 LSB         9  low byte of wind gust time
+WC0 MSB         10 high byte of wind pulse count
+WC0 LSB         11 low byte of wind pulse count
+
+WS1 MSB         12 high byte of wind speed time
+WS1 LSB         13 low byte of wind speed time
+WG1 MSB         14 high byte of wind gust time
+WG1 LSB         15 low byte of wind gust time
+WC1 MSB         16 high byte of wind pulse count
+WC1 LSB         17 low byte of wind pulse count
+
+AN0 MSB         18 high byte of analog 0 (wind vane)
+AN0 LSB         19 high byte of analog 0 (wind vane)
+AN1 MSB         20 high byte of analog 1
+AN1 LSB         21 high byte of analog 1
+
+BATT MSB        22 high byte of battery voltage
+BATT LSB        23 high byte of battery voltage
+
+CRC MSB         24 high byte of CRC on everything after STX and before CRC
+CRC LSB         25 low byte of CRC 
+*/
+
+//	output_high(WV1_FILTERED);
+
+
+		buff[0]='#';
+		buff[1]=current.serial_prefix;
+		buff[2]=current.serial_msb;
+		buff[3]=current.serial_lsb;
+		buff[4]=15; /* packet length */
+		buff[5]=0x07; /* packet type */
+
+		if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
+			/* scale Thies anemometer frequency to #40HC recipricol frequency */
+			l=anemometer_thies_to_40HC(pulse_period);
+			buff[6]=make8(l,1); /* wind speed */
+			buff[7]=make8(l,0);
+
+			l=anemometer_thies_to_40HC(pulse_min_period);
+			buff[8]=make8(l,1); /* wind gust */
+			buff[9]=make8(l,0);
+		} else {
+			buff[6]=make8(pulse_period,1); /* wind speed */
+			buff[7]=make8(pulse_period,0);
+			buff[8]=make8(pulse_min_period,1); /* wind gust */
+			buff[9]=make8(pulse_min_period,0); 
+		}
+		buff[10]=make8(pulse_count,1); /* wind pulse count */
+		buff[11]=make8(pulse_count,0); 
+
+		/* second anemometer not yet implemented */
+		buff[12]=buff[13]=buff[14]=buff[15]=buff[16]=buff[17]=0;
+
+		/* analog0 */
+		buff[18]=make8(current.analog0_adc,1);
+		buff[19]=make8(current.analog0_adc,0);
+
+		/* analog1 */
+		buff[20]=make8(current.analog1_adc,1);
+		buff[21]=make8(current.analog1_adc,0);
+
+		/* battery */
+		buff[22]=make8(current.input_voltage_adc,1);
+		buff[23]=make8(current.input_voltage_adc,0);
+
+		lCRC=crc_chk(buff+1,23);
+		buff[24]=make8(lCRC,1);
+		buff[25]=make8(lCRC,0);
+	} else {
+		/* normal RD Logger Cell */
 /* 
 '#'             0  STX
 UNIT ID PREFIX  1  First character (A-Z) for serial number
@@ -40,39 +124,39 @@ CRC LSB         14 low byte of CRC
 //	output_high(WV1_FILTERED);
 
 
-	buff[0]='#';
-	buff[1]=current.serial_prefix;
-	buff[2]=current.serial_msb;
-	buff[3]=current.serial_lsb;
-	buff[4]=15; /* packet length */
-	buff[5]=0x07; /* packet type */
+		buff[0]='#';
+		buff[1]=current.serial_prefix;
+		buff[2]=current.serial_msb;
+		buff[3]=current.serial_lsb;
+		buff[4]=15; /* packet length */
+		buff[5]=0x07; /* packet type */
 
-	if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
-		/* scale Thies anemometer frequency to #40HC recipricol frequency */
-		l=anemometer_thies_to_40HC(pulse_period);
-		buff[6]=make8(l,1); /* wind speed */
-		buff[7]=make8(l,0);
+		if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
+			/* scale Thies anemometer frequency to #40HC recipricol frequency */
+			l=anemometer_thies_to_40HC(pulse_period);
+			buff[6]=make8(l,1); /* wind speed */
+			buff[7]=make8(l,0);
 
-		l=anemometer_thies_to_40HC(pulse_min_period);
-		buff[8]=make8(l,1); /* wind gust */
-		buff[9]=make8(l,0);
+			l=anemometer_thies_to_40HC(pulse_min_period);
+			buff[8]=make8(l,1); /* wind gust */
+			buff[9]=make8(l,0);
+		} else {
+			buff[6]=make8(pulse_period,1); /* wind speed */
+			buff[7]=make8(pulse_period,0);
+			buff[8]=make8(pulse_min_period,1); /* wind gust */
+			buff[9]=make8(pulse_min_period,0); 
+		}
+		buff[10]=(current.battery_charge<<4) + (current.wind_direction_sector & 0x0F); /* battery % full, wind direction sector */
+		buff[11]=make8(pulse_count,1); /* wind pulse count */
+		buff[12]=make8(pulse_count,0); 
 
-	} else {
-		buff[6]=make8(pulse_period,1); /* wind speed */
-		buff[7]=make8(pulse_period,0);
-		buff[8]=make8(pulse_min_period,1); /* wind gust */
-		buff[9]=make8(pulse_min_period,0); 
+		lCRC=crc_chk(buff+1,12);
+		buff[13]=make8(lCRC,1);
+		buff[14]=make8(lCRC,0);
 	}
-	buff[10]=(current.battery_charge<<4) + (current.wind_direction_sector & 0x0F); /* battery % full, wind direction sector */
-	buff[11]=make8(pulse_count,1); /* wind pulse count */
-	buff[12]=make8(pulse_count,0); 
-
-	lCRC=crc_chk(buff+1,12);
-	buff[13]=make8(lCRC,1);
-	buff[14]=make8(lCRC,0);
 
 	/* send to wireless modem */
-	for ( i=0 ; i<sizeof(buff) ; i++ ) {
+	for ( i=0 ; i<buff[4] ; i++ ) {
 		/* xbee modem */
 		fputc(buff[i],stream_wireless);
 	}	

@@ -67,6 +67,13 @@ void screen_dataflash(void) {
 	printf(lcd_putch,"%lu/%lu full",make16(read_ext_fram(FRAM_ADDR_DATAFLASH_PAGE+0),read_ext_fram(FRAM_ADDR_DATAFLASH_PAGE+1)),DATAFLASH_PAGES);
 }
 
+void screen_analog(void) {
+	printf(lcd_putch,"Analog 0: %lu",current.analog0_adc);
+	lcd_goto(LCD_LINE_TWO);
+	printf(lcd_putch,"Analog 1: %lu",current.analog1_adc);
+//                    0123456789012345
+}	
+
 void screen_power(void) {	
 	float voltage;
 
@@ -247,6 +254,7 @@ void screen_set_serial(short reset) {
 	int8 hwtype;
 	int8 antype;
 	int8 sdrate;
+	int8 livetype;
 	int16 last_serial_number;
 
 	if ( reset ) {
@@ -464,7 +472,7 @@ void screen_set_serial(short reset) {
 	}
 
 
-	/* write the new hardware type */
+	/* write the new hlog rate */
 	write_eeprom(EE_SD_LOG_RATE,sdrate);
 
 	/* read it back out */
@@ -473,6 +481,51 @@ void screen_set_serial(short reset) {
 
 	lcd_clear();
 	lcd_putch("Wrote SD rate");
+	delay_ms(1000);
+	lcd_clear();
+
+
+
+
+	/* live data format */
+	for ( ; ; ) {
+
+		lcd_goto(LCD_LINE_ONE);
+		printf(lcd_putch," - LIVE FORMAT - ");
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"SHORT       FULL");
+//                        0123456789012345
+
+		if ( action.select_now ) {
+			action.select_now=0;
+		}
+
+		if ( action.up_now ) {
+			action.up_now=0;
+			livetype=LIVE_TYPE_SHORT;
+			break;
+		}
+
+		if ( action.down_now ) {
+			action.down_now=0;
+			livetype=LIVE_TYPE_FULL;
+			break;
+		}
+
+		delay_ms(20);
+		restart_wdt();
+	}
+
+
+	/* write the new hardware type */
+	write_eeprom(EE_LIVE_TYPE,livetype);
+
+	/* read it back out */
+	current.live_type=read_eeprom(EE_LIVE_TYPE);
+
+
+	lcd_clear();
+	lcd_putch("Wrote live type");
 	delay_ms(1000);
 	lcd_clear();
 
@@ -741,12 +794,13 @@ void screen_select(void) {
 			case 3:  screen_dataflash(); has_buttons=0; break;
 			case 4:  screen_sd(); has_buttons=0; break;
 			case 5:  screen_t(); has_buttons=0; break;
-			case 6:  screen_power(); has_buttons=0; break;
-			case 7:  screen_modem_seconds(); has_buttons=0; break;
-			case 8:  has_buttons=screen_set_date();  break;
-			case 9:  has_buttons=screen_set_time(); break;
-			case 10: screen_download(); has_buttons=0; break;
-			case 11: screen_version(); has_buttons=0; break;
+			case 6:  screen_analog(); has_buttons=0; break;
+			case 7:  screen_power(); has_buttons=0; break;
+			case 8:  screen_modem_seconds(); has_buttons=0; break;
+			case 9:  has_buttons=screen_set_date();  break;
+			case 10: has_buttons=screen_set_time(); break;
+			case 11: screen_download(); has_buttons=0; break;
+			case 12: screen_version(); has_buttons=0; break;
 		}
 
 }

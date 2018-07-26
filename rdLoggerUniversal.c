@@ -12,6 +12,9 @@ typedef struct {
 	int16 input_voltage_adc;
 	int8 wind_direction_sector;
 	int8 battery_charge;
+	int16 analog0_adc;
+	int16 analog1_adc;
+
 
 	int8 serial_prefix;
 	int8 serial_msb;
@@ -21,6 +24,7 @@ typedef struct {
 	int16 uptime;
 	int8 hardware_type;
 	int8 anemometer_type;
+	int8 live_type;
 	int8 sd_log_rate;
 } struct_current;
 
@@ -260,6 +264,7 @@ void basicInit() {
 	current.hardware_type=read_eeprom(EE_HW_TYPE);
 	current.anemometer_type=read_eeprom(EE_ANEMOMETER_TYPE);
 	current.sd_log_rate=read_eeprom(EE_SD_LOG_RATE);
+	current.live_type=read_eeprom(EE_LIVE_TYPE);
 
 	log.page_requested=65535;
 
@@ -296,7 +301,7 @@ void basicInit() {
 
 void serialNumberCheck(void) {
 	/* 	middle button sets serial number */
-	if ( 'R' != read_eeprom(EE_SERIAL_PREFIX) || read_eeprom(EE_HW_TYPE) > HARDWARE_TYPE_RDLOGGERUNIVERSAL || read_eeprom(EE_ANEMOMETER_TYPE) > ANEMOMETER_TYPE_THIES ) {
+	if ( 'R' != read_eeprom(EE_SERIAL_PREFIX) || read_eeprom(EE_HW_TYPE) > HARDWARE_TYPE_RDLOGGERUNIVERSAL || read_eeprom(EE_ANEMOMETER_TYPE) > ANEMOMETER_TYPE_THIES || read_eeprom(EE_LIVE_TYPE) > LIVE_TYPE_FULL ) {
 		screen_set_serial(1);
 	} else if ( 0==action.up_now && 1==action.select_now && 0==action.down_now ) {
 		action.select_now=0;
