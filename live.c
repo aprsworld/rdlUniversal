@@ -62,7 +62,7 @@ CRC LSB         25 low byte of CRC
 		buff[1]=current.serial_prefix;
 		buff[2]=current.serial_msb;
 		buff[3]=current.serial_lsb;
-		buff[4]=15; /* packet length */
+		buff[4]=26; /* packet length */
 		buff[5]=0x07; /* packet type */
 
 		if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
@@ -167,7 +167,7 @@ CRC LSB         14 low byte of CRC
 	if ( SD_LOG_RATE_10 == current.sd_log_rate ) {
 		/* write to SD card */
 		/* decimal for human readability and for mmcDaughter */
-		sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u:%02u,%lu,%lu,%lu,%lu,%u,%lu,%c%lu\n",
+		sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u:%02u,%lu,%lu,%lu,%lu,%lu,%lu,%c%lu\n",
 			timers.year, 
 			timers.month, 
 			timers.day, 
@@ -178,7 +178,7 @@ CRC LSB         14 low byte of CRC
 			pulse_min_period, 
 			pulse_count, 
 			current.input_voltage_adc,
-			current.wind_direction_sector,
+			current.analog0_adc,
 			current.uptime,
 			current.serial_prefix,
 			make16(current.serial_msb,current.serial_lsb)
