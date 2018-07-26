@@ -527,8 +527,8 @@ void screen_set_serial(short reset) {
 	lcd_clear();
 	printf(lcd_putch,"Wrote live %d",livetype);
 //                    0123456789012345
-	lcd_putch("Wrote live type");
-	delay_ms(1000);
+//	lcd_putch("Wrote live type");
+	delay_ms(2000);
 	lcd_clear();
 
 }
