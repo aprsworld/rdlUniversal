@@ -166,6 +166,7 @@ void task_10millisecond(void);
 #include "rtc.c"
 #include "screens.c"
 #include "gps.c"
+#include "cmps12.c"
 #include "live.c"
 
 

@@ -105,3 +105,8 @@
 #define LIVE_TYPE_FULL  1
 
 const int16 int16_tens[]={10000,1000,100,10,1};
+
+#define I2C_ADDR_CMPS12 0xC0
+#define I2C_ADDR_MS5611 0x77
+#define I2C_ADDR_DS1307 0x68
+#define I2C_ADDR_NVRAM  0xA0
