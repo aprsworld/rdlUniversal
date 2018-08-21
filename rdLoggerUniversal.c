@@ -26,6 +26,8 @@ typedef struct {
 	int8 anemometer_type;
 	int8 live_type;
 	int8 sd_log_rate;
+	int8 wind_direction_source;
+	int16 wind_direction_offset;
 } struct_current;
 
 

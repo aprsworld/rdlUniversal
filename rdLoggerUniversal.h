@@ -21,13 +21,14 @@
 #use standard_io(F)
 
 /* location where serial number is stored */
-#define EE_SERIAL_PREFIX   0x10
-#define EE_SERIAL_MSB      0x11
-#define EE_SERIAL_LSB      0x12
-#define EE_HW_TYPE         0x13
-#define EE_ANEMOMETER_TYPE 0x14
-#define EE_SD_LOG_RATE     0x15
-#define EE_LIVE_TYPE       0x16
+#define EE_SERIAL_PREFIX         0x10
+#define EE_SERIAL_MSB            0x11
+#define EE_SERIAL_LSB            0x12
+#define EE_HW_TYPE               0x13
+#define EE_ANEMOMETER_TYPE       0x14
+#define EE_SD_LOG_RATE           0x15
+#define EE_LIVE_TYPE             0x16
+#define EE_WIND_DIRECTION_SOURCE 0x17
 
 //#define ANEMOMETER_TIMEOUT 2000
 #define MODEM_TIMEOUT_SECONDS 240
@@ -103,6 +104,9 @@
 
 #define LIVE_TYPE_SHORT 0
 #define LIVE_TYPE_FULL  1
+
+#define WIND_DIRECTION_SOURCE_ADC    0
+#define WIND_DIRECTION_SOURCE_CMPS12 1
 
 const int16 int16_tens[]={10000,1000,100,10,1};
 

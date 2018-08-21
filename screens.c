@@ -257,6 +257,7 @@ void screen_set_serial(short reset) {
 	int8 antype;
 	int8 sdrate;
 	int8 livetype;
+	int8 wdsource;
 	int16 last_serial_number;
 
 	if ( reset ) {
@@ -266,6 +267,7 @@ void screen_set_serial(short reset) {
 		write_eeprom(EE_HW_TYPE,HARDWARE_TYPE_RDLOGGERUNIVERSAL);
 		write_eeprom(EE_ANEMOMETER_TYPE,ANEMOMETER_TYPE_40HC);
 		write_eeprom(EE_SD_LOG_RATE,SD_LOG_RATE_60);
+		write_eeprom(EE_WIND_DIRECTION_SOURCE, WIND_DIRECTION_SOURCE_ADC);
 
 
 		lcd_clear();
@@ -279,8 +281,6 @@ void screen_set_serial(short reset) {
 
 	action.select_now=action.up_now=action.down_now=0;
 
-#if 1
-	/* from sdLoggerThermok */
 	lcd_clear();
 
 	printf(lcd_putch,"Setting SN...");
@@ -310,34 +310,6 @@ void screen_set_serial(short reset) {
 		}
 	}
 
-#else
-	/* old style press press press press */
-	for ( ; ; ) {
-		lcd_goto(LCD_LINE_ONE);
-		printf(lcd_putch,"Serial: %c%lu     ",serial_prefix,serial);
-		lcd_goto(LCD_LINE_TWO);
-		printf(lcd_putch,"-     DONE     +");
-
-
-		if ( action.select_now ) {
-			action.select_now=0;
-			break;
-		}
-
-		if ( action.up_now ) {
-			action.up_now=0;
-			serial++;
-		}
-
-		if ( action.down_now ) {
-			action.down_now=0;
-			serial--;
-		}
-
-		delay_ms(20);
-		restart_wdt();
-	}
-#endif
 
 
 	/* write the new serial number */
@@ -361,6 +333,7 @@ void screen_set_serial(short reset) {
 	lcd_clear();
 
 
+	/* set hardware type */
 	for ( ; ; ) {
 
 		lcd_goto(LCD_LINE_ONE);
@@ -401,6 +374,8 @@ void screen_set_serial(short reset) {
 	delay_ms(1000);
 	lcd_clear();
 
+
+	/* set anemometer type */
 	for ( ; ; ) {
 
 		lcd_goto(LCD_LINE_ONE);
@@ -444,7 +419,7 @@ void screen_set_serial(short reset) {
 
 
 
-	/* SD card log interval */
+	/* set SD card log interval */
 	for ( ; ; ) {
 
 		lcd_goto(LCD_LINE_ONE);
@@ -489,7 +464,7 @@ void screen_set_serial(short reset) {
 
 
 
-	/* live data format */
+	/* set live data format */
 	for ( ; ; ) {
 
 		lcd_goto(LCD_LINE_ONE);
@@ -519,7 +494,7 @@ void screen_set_serial(short reset) {
 	}
 
 
-	/* write the new hardware type */
+	/* write the new live type */
 	write_eeprom(EE_LIVE_TYPE,livetype);
 
 	/* read it back out */
@@ -528,6 +503,51 @@ void screen_set_serial(short reset) {
 
 	lcd_clear();
 	printf(lcd_putch,"Wrote live %d",livetype);
+//                    0123456789012345
+//	lcd_putch("Wrote live type");
+	delay_ms(2000);
+	lcd_clear();
+
+
+	/* set wind direction source */
+	for ( ; ; ) {
+
+		lcd_goto(LCD_LINE_ONE);
+		printf(lcd_putch,"- WIND DIR SRC -");
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"ADC       CMPS12");
+//                        0123456789012345
+
+		if ( action.select_now ) {
+			action.select_now=0;
+		}
+
+		if ( action.up_now ) {
+			action.up_now=0;
+			wdsource=WIND_DIRECTION_SOURCE_CMPS12;
+			break;
+		}
+
+		if ( action.down_now ) {
+			action.down_now=0;
+			wdsource=WIND_DIRECTION_SOURCE_ADC;
+			break;
+		}
+
+		delay_ms(20);
+		restart_wdt();
+	}
+
+
+	/* write the new live type */
+	write_eeprom(EE_WIND_DIRECTION_SOURCE,wdsource);
+
+	/* read it back out */
+	current.wind_direction_source=read_eeprom(EE_WIND_DIRECTION_SOURCE);
+
+
+	lcd_clear();
+	printf(lcd_putch,"Wrote wdsrc %d",livetype);
 //                    0123456789012345
 //	lcd_putch("Wrote live type");
 	delay_ms(2000);
