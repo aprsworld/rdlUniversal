@@ -1,8 +1,8 @@
 /* Command register (write) / Software version (read) */
-#define CMPS12_REG_COMMAND_VERSION 0x00
+#define CMPS12_REG_COMMAND_VERSION     0x00
 
 /* Compass Bearing 8 bit, i.e. 0-255 for a full circle */
-#define CMPS12_REG_BEARING            0x01
+#define CMPS12_REG_BEARING             0x01
 
 /* Compass Bearing 16 bit, i.e. 0-3599, representing 0-359.9 degrees. register 2 being the 
 high byte. This is calculated by the processor from quaternion outputs of the BNO055 */
@@ -68,3 +68,37 @@ divide by 16 for degrees */
 calibrated) */
 #define CMPS12_REG_CALIBRATION_STATE   0x1E
 
+
+int8 cmps12_get_int8(int8 addr) {
+	int8 value;
+
+	do {
+		i2c_start();
+	} while (1 == i2c_write(I2C_ADDR_CMPS12)); 
+    
+	/* address to read */
+	i2c_write(addr);  
+     
+	do {
+		i2c_start();
+	} while (1 == i2c_write(I2C_ADDR_CMPS12+1)); 
+
+    value=i2c_read(0);
+	i2c_stop();
+    
+	return value;
+}
+
+int16 cmps12_get_int16(int8 addr) {
+	int16 value;
+
+	value=make16(cmps12_get_int8(addr),cmps12_get_int8(addr+1));
+
+
+	return value;
+}
+
+#inline
+int8 cmps12_get_version() {
+	return cmps12_get_int8(CMPS12_REG_COMMAND_VERSION);
+}

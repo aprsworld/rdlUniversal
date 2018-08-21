@@ -164,9 +164,9 @@ void task_10millisecond(void);
 #include "log.c"
 #include "adc.c"
 #include "rtc.c"
+#include "cmps12.c"
 #include "screens.c"
 #include "gps.c"
-#include "cmps12.c"
 #include "live.c"
 
 

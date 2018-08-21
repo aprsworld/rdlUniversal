@@ -144,6 +144,8 @@ void screen_version(void) {
 	printf(lcd_putch,"%s  %s",__DATE__,__TIME__);
 }
 
+
+
 void screen_wind(void) {
 	float f;
 
@@ -756,9 +758,48 @@ short screen_set_time(void) {
 	return got_buttons;
 }
 
+/* CMPS12 screens */
+void screen_cmps12_version_temperature(void) {
+	printf(lcd_putch,"CMPS Vers: 0x%02X", cmps12_get_int8(CMPS12_REG_COMMAND_VERSION) );
+//                    0123456789012345
+	lcd_goto(LCD_LINE_TWO);
+	printf(lcd_putch,"CMPS Temp: %u%cC", cmps12_get_int8(CMPS12_REG_TEMPERATURE), DEG_SYMBOL );
+}
+
+void screen_cmps12_calibration(void) {
+	printf(lcd_putch,"CMPS SY GY AC MA");
+//                    0123456789012345
+	
+	int8 cal=cmps12_get_int8(CMPS12_REG_CALIBRATION_STATE);
+
+	lcd_goto(LCD_LINE_TWO);
+	printf(lcd_putch,"%02Xh  %u  %u  %u  %u",
+		cal,
+		(cal>>6) & 0b11, /* system */
+		(cal>>4) & 0b11, /* gyro */
+		(cal>>2) & 0b11, /* accel */
+		cal & 0b11       /* magnetometer */
+	);
+}
+
+void screen_cmps12_angles(void) {
+//	printf(lcd_putch,"%03lu%c %02d%c   %02d%c", 
+	printf(lcd_putch,"%03.1lw%c %02d%c %02d%c", 
+		cmps12_get_int16(CMPS12_REG_BEARING_MSB), DEG_SYMBOL,
+		cmps12_get_int8(CMPS12_REG_PITCH), DEG_SYMBOL,
+ 		cmps12_get_int8(CMPS12_REG_ROLL), DEG_SYMBOL
+	);
+//                    0123456789012345
+//                    345d 25d   89d
+	lcd_goto(LCD_LINE_TWO);
+
+	printf(lcd_putch,"BEAR PITCH ROLL");
 
 
-#define MAX_SCREEN_RDLOGGER     11
+}
+
+
+#define MAX_SCREEN_RDLOGGER     16
 void screen_select(void) {
 	static int8 screen;
 	static short has_buttons=0;
@@ -803,6 +844,9 @@ void screen_select(void) {
 			case 10: has_buttons=screen_set_time(); break;
 			case 11: screen_download(); has_buttons=0; break;
 			case 12: screen_version(); has_buttons=0; break;
+			case 13: screen_cmps12_version_temperature(); has_buttons=0; break;
+			case 14: screen_cmps12_calibration(); has_buttons=0; break;
+			case 15: screen_cmps12_angles(); has_buttons=0; break;
 		}
 
 }
