@@ -109,7 +109,7 @@ void cmps12_erase_calibration(void) {
 	delay_ms(20);
 }
 
-int8 cmps12_get_int8(int8 addr) {
+int8 cmps12_read_int8(int8 addr) {
 	int8 value;
 
 	do {
@@ -129,13 +129,12 @@ int8 cmps12_get_int8(int8 addr) {
 	return value;
 }
 
+int8 cmps12_get_int8(int8 addr) {
+	return current.cmps12_register[addr];
+}
+
 int16 cmps12_get_int16(int8 addr) {
-	int16 value;
-
-	value=make16(cmps12_get_int8(addr),cmps12_get_int8(addr+1));
-
-
-	return value;
+	return make16(current.cmps12_register[addr],current.cmps12_register[addr+1]);
 }
 
 #inline
@@ -147,7 +146,33 @@ int8 cmps12_get_version() {
 void cmps12_read_registers(void) {
 	int8 i;
 
+#if 1
+	/* read one register at a time */
 	for ( i=0 ; i<=0x1E  ; i++ ) {
-		current.cmps12_register[i]=cmps12_get_int8(i);
+		current.cmps12_register[i]=cmps12_read_int8(i);
 	}
+#else 
+	do {
+		i2c_start();
+	} while (1 == i2c_write(I2C_ADDR_CMPS12)); 
+    
+	/* address to read */
+	i2c_write(addr);  
+     
+	do {
+		i2c_start();
+	} while (1 == i2c_write(I2C_ADDR_CMPS12+1)); 
+
+	for ( i=0 ; i<0x1E  ; i++ ) {
+		/* ack */
+		current.cmps12_register[i]=i2c_read(1);
+	}
+
+	/* don't ack last byte */
+	current.cmps12_register[0x1e]=i2c_read(0);
+
+    value=i2c_read(0);
+	i2c_stop();
+    
+#endif
 }
