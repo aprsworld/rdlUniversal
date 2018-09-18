@@ -68,10 +68,19 @@ divide by 16 for degrees */
 calibrated) */
 #define CMPS12_REG_CALIBRATION_STATE   0x1E
 
-int8 cmps12_write_int8(int8 addr, int8 val) {
+void cmps12_write_int8(int8 address, int8 data) {
+    short ackbit;
 
+    do {
+       i2c_start();
+       ackbit = i2c_write(I2C_ADDR_CMPS12);
+    } while ( ackbit );
 
-	return 0;
+    i2c_write(address);
+    i2c_write(data);
+    i2c_stop();
+
+    return;
 }
 
 void cmps12_save_calibration(void) {
