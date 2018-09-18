@@ -182,7 +182,7 @@ void cmps12_read_registers(void) {
 /* update current.wind_direction_sector and current.wind_direction_degrees */
 void cmps12_update_current(void) {
 	if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
-		current.wind_direction_degrees = (cmps12_get_int16(CMPS12_REG_BEARING_MSB) / 10) + current.wind_direction_offset;		
+		current.wind_direction_degrees = ( (cmps12_get_int16(CMPS12_REG_BEARING_MSB)+5) / 10) + current.wind_direction_offset;		
 
 		if ( current.wind_direction_degrees > 359 ) {
 			current.wind_direction_degrees -= 360;
