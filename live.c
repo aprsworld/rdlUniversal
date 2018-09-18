@@ -206,7 +206,11 @@ CRC LSB         14 low byte of CRC
 		}
 
 		if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source )  {
-			sprintf(buff_decimal,",%lu,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%d,%ld,%u",
+			/* add the following columns after serial number if CMPS12 module is the wind direction source:
+			wind direction	bearing * 10	pitch	roll	mag x	mag y	mag z	accel x	accel y	accell z	gyro x	gyro y	gyro z	bosch compass	temp	pitch	cal state
+			*/
+			sprintf(buff_decimal,",%lu,%lu,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%d,%ld,%u",
+				current.wind_direction_degrees,
 				cmps12_get_int16(CMPS12_REG_BEARING_MSB),
 			
 				cmps12_get_int8(CMPS12_REG_PITCH),
