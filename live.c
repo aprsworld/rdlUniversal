@@ -86,19 +86,28 @@ CRC LSB         25 low byte of CRC
 		/* second anemometer not yet implemented */
 		buff[12]=buff[13]=buff[14]=buff[15]=buff[16]=buff[17]=0;
 
-		/* analog0 */
+
+		/* if CMPS12 as wind direction source, put:
+		    bearing in place of analog0, 
+            pitch in place of analog1 MSB, 
+		    roll in place of of analog1 LSB
+		*/
 		if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
 			/* use CMPS12 direction instead of analog0 */	
 			buff[18]=make8(current.wind_direction_degrees,1);
 			buff[19]=make8(current.wind_direction_degrees,0);
+
+			buff[20]=cmps12_get_int8(CMPS12_REG_PITCH);
+			buff[21]=cmps12_get_int8(CMPS12_REG_ROLL);
 		} else {
+			/* analog0 */
 			buff[18]=make8(current.analog0_adc,1);
 			buff[19]=make8(current.analog0_adc,0);
-		}
 
-		/* analog1 */
-		buff[20]=make8(current.analog1_adc,1);
-		buff[21]=make8(current.analog1_adc,0);
+			/* analog1 */
+			buff[20]=make8(current.analog1_adc,1);
+			buff[21]=make8(current.analog1_adc,0);
+		}
 
 		/* battery */
 		buff[22]=make8(current.input_voltage_adc,1);
@@ -173,7 +182,7 @@ CRC LSB         14 low byte of CRC
 	if ( SD_LOG_RATE_10 == current.sd_log_rate ) {
 		/* write to SD card */
 		/* decimal for human readability and for mmcDaughter */
-		sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u:%02u,%lu,%lu,%lu,%lu,%lu,%lu,%c%lu\n",
+		sprintf(buff_decimal,"20%02u-%02u-%02u %02u:%02u:%02u,%lu,%lu,%lu,%lu,%lu,%lu,%c%lu",
 			timers.year, 
 			timers.month, 
 			timers.day, 
@@ -195,6 +204,46 @@ CRC LSB         14 low byte of CRC
 			fputc(buff_decimal[i],stream_sd);
 			delay_ms(1);
 		}
+
+		if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source )  {
+			sprintf(buff_decimal,",%lu,%d,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%d,%ld,%u",
+				cmps12_get_int16(CMPS12_REG_BEARING_MSB),
+			
+				cmps12_get_int8(CMPS12_REG_PITCH),
+				cmps12_get_int8(CMPS12_REG_ROLL),
+			
+				cmps12_get_int16(CMPS12_REG_MAGNETOMETER_X_MSB),
+				cmps12_get_int16(CMPS12_REG_MAGNETOMETER_Y_MSB),
+				cmps12_get_int16(CMPS12_REG_MAGNETOMETER_Z_MSB),
+		
+				cmps12_get_int16(CMPS12_REG_ACCELEROMETER_X_MSB),
+				cmps12_get_int16(CMPS12_REG_ACCELEROMETER_Y_MSB),
+				cmps12_get_int16(CMPS12_REG_ACCELEROMETER_Z_MSB),
+
+				cmps12_get_int16(CMPS12_REG_GYRO_X_MSB),
+				cmps12_get_int16(CMPS12_REG_GYRO_Y_MSB),
+				cmps12_get_int16(CMPS12_REG_GYRO_Z_MSB),
+
+				cmps12_get_int16(CMPS12_REG_BNO055_COMPASS_MSB),	
+
+				cmps12_get_int8(CMPS12_REG_TEMPERATURE_LSB),
+
+				cmps12_get_int16(CMPS12_REG_PITCH_ANGLE_MSB),
+
+				cmps12_get_int8(CMPS12_REG_CALIBRATION_STATE)	
+			);
+
+			for ( i=0 ; i<strlen(buff_decimal) ; i++ ) {
+				/* rdLogger via builtin UART2 */
+				fputc(buff_decimal[i],stream_sd);
+				delay_ms(1);
+			}
+
+		}
+
+
+		/* terminate with new line */
+		fputc('\n',stream_sd);
 	}
 
 

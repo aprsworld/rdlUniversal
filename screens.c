@@ -789,7 +789,7 @@ void screen_cmps12_version_temperature(void) {
 	printf(lcd_putch,"CMPS Vers: 0x%02X", cmps12_get_int8(CMPS12_REG_COMMAND_VERSION) );
 //                    0123456789012345
 	lcd_goto(LCD_LINE_TWO);
-	printf(lcd_putch,"CMPS Temp: %u%cC", cmps12_get_int8(CMPS12_REG_TEMPERATURE), DEG_SYMBOL );
+	printf(lcd_putch,"CMPS Temp: %d%cC", cmps12_get_int8(CMPS12_REG_TEMPERATURE_LSB), DEG_SYMBOL );
 }
 
 void screen_cmps12_calibration(void) {
@@ -819,7 +819,7 @@ void screen_cmps12_angles(void) {
 //                    345d 25d   89d
 	lcd_goto(LCD_LINE_TWO);
 
-	printf(lcd_putch,"BEAR PITCH ROLL");
+	printf(lcd_putch,"RAW%c PITCH ROLL",DEG_SYMBOL);
 
 
 }

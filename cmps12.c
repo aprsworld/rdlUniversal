@@ -52,7 +52,9 @@ high byte. This is calculated by the processor from quaternion outputs of the BN
 #define CMPS12_REG_GYRO_Z_LSB          0x17
 
 /* Temperature of the BNO055 in degrees centigrade */
-#define CMPS12_REG_TEMPERATURE         0x19
+/* BUG? Seems to be a signed 8 bit number in LSB register */
+#define CMPS12_REG_TEMPERATURE_MSB     0x18
+#define CMPS12_REG_TEMPERATURE_LSB     0x19
 
 /* Compass Bearing 16 bit This is the angle Bosch generate in the BNO055 (0-5759), 
 divide by 16 for degrees */
@@ -179,8 +181,6 @@ void cmps12_read_registers(void) {
 
 /* update current.wind_direction_sector and current.wind_direction_degrees */
 void cmps12_update_current(void) {
-	int16 l;
-
 	if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
 		current.wind_direction_degrees = (cmps12_get_int16(CMPS12_REG_BEARING_MSB) / 10) + current.wind_direction_offset;		
 
