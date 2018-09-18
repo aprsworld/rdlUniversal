@@ -68,6 +68,37 @@ divide by 16 for degrees */
 calibrated) */
 #define CMPS12_REG_CALIBRATION_STATE   0x1E
 
+int8 cmps12_write_int8(int8 addr, int8 val) {
+
+
+	return 0;
+}
+
+void cmps12_save_calibration(void) {
+	/* To store a profile write the following to the command register:
+	   0xF0, 0xF5, 0xF6 with a 20ms delay after each of the three bytes.
+	*/
+	cmps12_write_int8(0x00, 0xF0);
+	delay_ms(20);
+	cmps12_write_int8(0x00, 0xF5);
+	delay_ms(20);
+	cmps12_write_int8(0x00, 0xF6);
+	delay_ms(20);
+}
+
+void cmps12_erase_calibration(void) {
+	/* To erase the stored profileso your module powers into a default state write the 
+	   following to the command register:
+	   0xE0, 0xE5, 0xE2 with a 20ms delay after each of the three bytes.
+	*/
+
+	cmps12_write_int8(0x00, 0xE0);
+	delay_ms(20);
+	cmps12_write_int8(0x00, 0xE5);
+	delay_ms(20);
+	cmps12_write_int8(0x00, 0xE2);
+	delay_ms(20);
+}
 
 int8 cmps12_get_int8(int8 addr) {
 	int8 value;
@@ -101,4 +132,13 @@ int16 cmps12_get_int16(int8 addr) {
 #inline
 int8 cmps12_get_version() {
 	return cmps12_get_int8(CMPS12_REG_COMMAND_VERSION);
+}
+
+/* read all registers from the CMPS12 module and put into current.cmps12_register[] array */
+void cmps12_read_registers(void) {
+	int8 i;
+
+	for ( i=0 ; i<=0x1E  ; i++ ) {
+		current.cmps12_register[i]=cmps12_get_int8(i);
+	}
 }

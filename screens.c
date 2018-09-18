@@ -818,19 +818,67 @@ void screen_cmps12_angles(void) {
 
 }
 
+short screen_cmps12_set_calibration(void) {
+	static short got_buttons=0;
 
-#define MAX_SCREEN_RDLOGGER     16
+	printf(lcd_putch,"CMPS12 Cal");
+//                    0123456789012345
+
+
+	if ( 0 == got_buttons ) {
+		if ( action.select_now ) {
+			/* set button pressed */
+			got_buttons=1;
+			action.select_now=0;
+			action.now_redraw=1;
+		} else {
+			/* prompt to set */
+			prompt_prev_set_next();
+		}
+	} 
+
+	if ( 1 == got_buttons ) {
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"STORE EXIT ERASE");
+//                        0123456789012345
+
+		if ( action.up_now ) {
+			action.up_now=0;
+			action.now_redraw=1;
+			cmps12_erase_calibration();
+		}
+		if ( action.down_now ) {
+			action.down_now=0;
+			action.now_redraw=1;
+			cmps12_save_calibration();
+		}
+		if ( action.select_now ) {
+			action.select_now=0;
+			action.now_redraw=1;
+			got_buttons=0;
+		}
+	}
+
+	return got_buttons;
+}
+
+
+#define MAX_SCREEN_RDLOGGER_BASIC     12
+#define ADDITIONAL_SCREENS_CMPS12     4
 void screen_select(void) {
 	static int8 screen;
 	static short has_buttons=0;
-	int8 max_screen;
+	int8 max_screen=MAX_SCREEN_RDLOGGER_BASIC;
 
-	max_screen=MAX_SCREEN_RDLOGGER;	
+	/* turn on additional screens if we are equipped with CMPS12 */
+	if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
+		max_screen  +=  ADDITIONAL_SCREENS_CMPS12;
+	}
 
 	if ( ! has_buttons && action.up_now ) {
 		action.up_now=0;
 
-		if ( screen<max_screen ) {
+		if ( screen < max_screen ) {
 			screen++;
 		} else {
 			screen=0;
@@ -864,9 +912,11 @@ void screen_select(void) {
 			case 10: has_buttons=screen_set_time(); break;
 			case 11: screen_download(); has_buttons=0; break;
 			case 12: screen_version(); has_buttons=0; break;
+			/* for CMPS12 equipped versions */
 			case 13: screen_cmps12_version_temperature(); has_buttons=0; break;
 			case 14: screen_cmps12_calibration(); has_buttons=0; break;
 			case 15: screen_cmps12_angles(); has_buttons=0; break;
+			case 16: has_buttons=screen_cmps12_set_calibration(); break;
 		}
 
 }

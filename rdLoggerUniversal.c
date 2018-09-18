@@ -28,6 +28,8 @@ typedef struct {
 	int8 sd_log_rate;
 	int8 wind_direction_source;
 	int16 wind_direction_offset;
+
+	int8 cmps12_register[32];
 } struct_current;
 
 
@@ -424,6 +426,11 @@ void task_second(void) {
 		output_high(LED_ANEMOMETER);
 	} else {
 		output_low(LED_ANEMOMETER);
+	}
+
+	if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
+		/* read registers from CMPS12 */
+		cmps12_read_registers();
 	}
 
 
