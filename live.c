@@ -87,8 +87,14 @@ CRC LSB         25 low byte of CRC
 		buff[12]=buff[13]=buff[14]=buff[15]=buff[16]=buff[17]=0;
 
 		/* analog0 */
-		buff[18]=make8(current.analog0_adc,1);
-		buff[19]=make8(current.analog0_adc,0);
+		if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
+			/* use CMPS12 direction instead of analog0 */	
+			buff[18]=make8(current.wind_direction_degrees,1);
+			buff[19]=make8(current.wind_direction_degrees,0);
+		} else {
+			buff[18]=make8(current.analog0_adc,1);
+			buff[19]=make8(current.analog0_adc,0);
+		}
 
 		/* analog1 */
 		buff[20]=make8(current.analog1_adc,1);

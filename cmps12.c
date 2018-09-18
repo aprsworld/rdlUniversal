@@ -146,18 +146,19 @@ int8 cmps12_get_version() {
 void cmps12_read_registers(void) {
 	int8 i;
 
-#if 1
+#if 0
 	/* read one register at a time */
 	for ( i=0 ; i<=0x1E  ; i++ ) {
 		current.cmps12_register[i]=cmps12_read_int8(i);
 	}
 #else 
+	/* read all in one I2C transaction */
 	do {
 		i2c_start();
 	} while (1 == i2c_write(I2C_ADDR_CMPS12)); 
     
 	/* address to read */
-	i2c_write(addr);  
+	i2c_write(0);  
      
 	do {
 		i2c_start();
@@ -171,8 +172,45 @@ void cmps12_read_registers(void) {
 	/* don't ack last byte */
 	current.cmps12_register[0x1e]=i2c_read(0);
 
-    value=i2c_read(0);
 	i2c_stop();
     
 #endif
+}
+
+/* update current.wind_direction_sector and current.wind_direction_degrees */
+void cmps12_update_current(void) {
+	int16 l;
+
+	if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
+		current.wind_direction_degrees = (cmps12_get_int16(CMPS12_REG_BEARING_MSB) / 10) + current.wind_direction_offset;		
+
+		if ( current.wind_direction_degrees > 359 ) {
+			current.wind_direction_degrees -= 360;
+		}
+
+		/* convert wind direction degrees to 0 to 7 sector. Sector is 45 degrees wide, offset halfway. IE sector 4 goes from
+		   157.5 (158) degrees to 202.5 (203) degrees */
+
+		if ( current.wind_direction_degrees > 338 )
+			current.wind_direction_sector=0;
+		else if ( current.wind_direction_degrees > 293 )
+			current.wind_direction_sector=7;
+		else if ( current.wind_direction_degrees > 248 )
+			current.wind_direction_sector=6;
+		else if ( current.wind_direction_degrees > 203 )
+			current.wind_direction_sector=5;
+		else if ( current.wind_direction_degrees > 158 )
+			current.wind_direction_sector=4;
+		else if ( current.wind_direction_degrees > 113 )
+			current.wind_direction_sector=3;
+		else if ( current.wind_direction_degrees > 68 )
+			current.wind_direction_sector=2;
+		else if ( current.wind_direction_degrees > 23 )
+			current.wind_direction_sector=1;
+		else
+			current.wind_direction_sector=0;
+
+
+	}
+
 }

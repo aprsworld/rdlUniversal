@@ -171,7 +171,10 @@ void sample_adc(void) {
 	}
 	delay_ms(1);
 	current.analog0_adc=read_adc();
-	current.wind_direction_sector=wind_sector(current.analog0_adc);
+
+	if ( WIND_DIRECTION_SOURCE_CMPS12 != current.wind_direction_source ) {
+		current.wind_direction_sector=wind_sector(current.analog0_adc);
+	}
 
 	set_adc_channel(ADC_WV1_FILTERED);
 	delay_ms(1);

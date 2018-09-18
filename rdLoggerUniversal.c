@@ -26,8 +26,10 @@ typedef struct {
 	int8 anemometer_type;
 	int8 live_type;
 	int8 sd_log_rate;
+
 	int8 wind_direction_source;
 	int16 wind_direction_offset;
+	int16 wind_direction_degrees;
 
 	int8 cmps12_register[32];
 } struct_current;
@@ -212,6 +214,7 @@ void basicInit() {
 	current.pulse_min_period=65535;
 	current.pulse_count_live=0;
 	current.pulse_count_log=0;
+	current.wind_direction_offset=90;
 
 	timers.pulse_count=0;
 
@@ -428,9 +431,12 @@ void task_second(void) {
 		output_low(LED_ANEMOMETER);
 	}
 
+	/* query the CMPS12 module once per second */
 	if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
 		/* read registers from CMPS12 */
 		cmps12_read_registers();
+
+		cmps12_update_current();
 	}
 
 

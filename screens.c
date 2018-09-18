@@ -89,20 +89,26 @@ void screen_power(void) {
 void screen_wind_direction(void) {
 	printf(lcd_putch,"Wind Direction:");
 	lcd_goto(LCD_LINE_TWO);
-	printf(lcd_putch,"Sector %u (",current.wind_direction_sector);
 
-	switch ( current.wind_direction_sector ) {
-		case 0: lcd_putch('0'); break;
-		case 1: lcd_putch("45"); break;
-		case 2: lcd_putch("90"); break;
-		case 3: lcd_putch("135"); break;
-		case 4: lcd_putch("180"); break;
-		case 5: lcd_putch("225"); break;
-		case 6: lcd_putch("270"); break;
-		case 7: lcd_putch("315"); break;
+	if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
+		printf(lcd_putch,"%3lu%c (SECTOR=%u)",current.wind_direction_degrees,DEG_SYMBOL,current.wind_direction_sector);
+
+	} else {
+		printf(lcd_putch,"Sector %u (",current.wind_direction_sector);
+
+		switch ( current.wind_direction_sector ) {
+			case 0: lcd_putch('0'); break;
+			case 1: lcd_putch("45"); break;
+			case 2: lcd_putch("90"); break;
+			case 3: lcd_putch("135"); break;
+			case 4: lcd_putch("180"); break;
+			case 5: lcd_putch("225"); break;
+			case 6: lcd_putch("270"); break;
+			case 7: lcd_putch("315"); break;
+		}
+
+		printf(lcd_putch,"%c)",DEG_SYMBOL);
 	}
-
-	printf(lcd_putch,"%c)",DEG_SYMBOL);
 }
 
 void screen_t(void) {
@@ -839,18 +845,30 @@ short screen_cmps12_set_calibration(void) {
 
 	if ( 1 == got_buttons ) {
 		lcd_goto(LCD_LINE_TWO);
-		printf(lcd_putch,"STORE EXIT ERASE");
+		printf(lcd_putch,"Store Exit Erase");
 //                        0123456789012345
 
 		if ( action.up_now ) {
 			action.up_now=0;
 			action.now_redraw=1;
+
+			lcd_goto(LCD_LINE_TWO);
+			printf(lcd_putch,"RESETTING CALIBR");
+//                            0123456789012345
 			cmps12_erase_calibration();
+			delay_ms(500);
+			got_buttons=0;
 		}
 		if ( action.down_now ) {
 			action.down_now=0;
 			action.now_redraw=1;
+
+			lcd_goto(LCD_LINE_TWO);
+			printf(lcd_putch,"SAVING CALIBRATI");
+//                            0123456789012345
 			cmps12_save_calibration();
+			delay_ms(500);
+			got_buttons=0;
 		}
 		if ( action.select_now ) {
 			action.select_now=0;
