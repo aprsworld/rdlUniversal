@@ -273,7 +273,7 @@ void basicInit() {
 	current.anemometer_type=read_eeprom(EE_ANEMOMETER_TYPE);
 	current.sd_log_rate=read_eeprom(EE_SD_LOG_RATE);
 	current.live_type=read_eeprom(EE_LIVE_TYPE);
-	current.live_type=read_eeprom(EE_WIND_DIRECTION_SOURCE);
+	current.wind_direction_source=read_eeprom(EE_WIND_DIRECTION_SOURCE);
 
 	log.page_requested=65535;
 
