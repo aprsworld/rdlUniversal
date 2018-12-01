@@ -1,5 +1,12 @@
 #!/usr/bin/php -q
 <?
+function cmps12UnisgnedToSigned($in) {
+	if ( $in > 32767 ) 
+		$in -= 65536;
+
+	return $in;
+}
+
 function rdLogger_CMPS_process_file($infile,$outfile) {
 	$fp['in']=fopen($infile,'r');
 
@@ -78,6 +85,17 @@ function rdLogger_CMPS_process_file($infile,$outfile) {
 		$r['CMPS12 CALIBRATION STATE']=$csv[24];
 
 		/* do some calculations */
+
+		/* BN055 sensor XYZ is signed */
+		$r['(CALC) CMPS12 MAG X']   = cmps12UnisgnedToSigned($r['CMPS12 MAG X']);
+		$r['(CALC) CMPS12 MAG Y']   = cmps12UnisgnedToSigned($r['CMPS12 MAG Y']);
+		$r['(CALC) CMPS12 MAG Z']   = cmps12UnisgnedToSigned($r['CMPS12 MAG Z']);
+		$r['(CALC) CMPS12 ACCEL X'] = cmps12UnisgnedToSigned($r['CMPS12 ACCEL X']);
+		$r['(CALC) CMPS12 ACCEL Y'] = cmps12UnisgnedToSigned($r['CMPS12 ACCEL Y']);
+		$r['(CALC) CMPS12 ACCEL Z'] = cmps12UnisgnedToSigned($r['CMPS12 ACCEL Z']);
+		$r['(CALC) CMPS12 GYRO X']  = cmps12UnisgnedToSigned($r['CMPS12 GYRO X']);
+		$r['(CALC) CMPS12 GYRO Y']  = cmps12UnisgnedToSigned($r['CMPS12 GYRO Y']);
+		$r['(CALC) CMPS12 GYRO Z']  = cmps12UnisgnedToSigned($r['CMPS12 GYRO Z']);
 
 		/* CMPS12 is bearing degrees * 10 */
 		$r['(CALC) CMPS12 BEARING DEGREES']=$r['CMPS12 BEARING']/10.0;
