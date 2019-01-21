@@ -214,7 +214,7 @@ void basicInit() {
 	current.pulse_min_period=65535;
 	current.pulse_count_live=0;
 	current.pulse_count_log=0;
-	current.wind_direction_offset=90;
+	current.wind_direction_offset=0;
 
 	timers.pulse_count=0;
 
@@ -310,7 +310,7 @@ void basicInit() {
 
 void serialNumberCheck(void) {
 	/* 	middle button sets serial number */
-	if ( 'R' != read_eeprom(EE_SERIAL_PREFIX) || read_eeprom(EE_HW_TYPE) > HARDWARE_TYPE_RDLOGGERUNIVERSAL || read_eeprom(EE_ANEMOMETER_TYPE) > ANEMOMETER_TYPE_THIES || read_eeprom(EE_LIVE_TYPE) > LIVE_TYPE_FULL ) {
+	if ( 'R' != read_eeprom(EE_SERIAL_PREFIX) || read_eeprom(EE_HW_TYPE) > HARDWARE_TYPE_RDLOGGERUNIVERSAL || read_eeprom(EE_ANEMOMETER_TYPE) > ANEMOMETER_TYPE_THIES || read_eeprom(EE_LIVE_TYPE) > LIVE_TYPE_CMPS12 ) {
 		screen_set_serial(1);
 	} else if ( 0==action.up_now && 1==action.select_now && 0==action.down_now ) {
 		action.select_now=0;

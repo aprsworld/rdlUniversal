@@ -102,8 +102,9 @@
 #define SD_LOG_RATE_60 0
 #define SD_LOG_RATE_10 1
 
-#define LIVE_TYPE_SHORT 0
-#define LIVE_TYPE_FULL  1
+#define LIVE_TYPE_SHORT  0
+#define LIVE_TYPE_FULL   1
+#define LIVE_TYPE_CMPS12 2
 
 #define WIND_DIRECTION_SOURCE_ADC    0
 #define WIND_DIRECTION_SOURCE_CMPS12 1
@@ -114,3 +115,5 @@ const int16 int16_tens[]={10000,1000,100,10,1};
 #define I2C_ADDR_MS5611 0x77
 #define I2C_ADDR_DS1307 0x68
 #define I2C_ADDR_NVRAM  0xA0
+
+#define DEBUG_HUMAN_OUTPUT 0

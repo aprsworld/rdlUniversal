@@ -476,11 +476,13 @@ void screen_set_serial(short reset) {
 		lcd_goto(LCD_LINE_ONE);
 		printf(lcd_putch," - LIVE FORMAT - ");
 		lcd_goto(LCD_LINE_TWO);
-		printf(lcd_putch,"SHORT       FULL");
+		printf(lcd_putch,"SHORT CMPS12 FULL");
 //                        0123456789012345
 
 		if ( action.select_now ) {
 			action.select_now=0;
+			livetype=LIVE_TYPE_CMPS12;
+			break;
 		}
 
 		if ( action.up_now ) {
@@ -808,18 +810,40 @@ void screen_cmps12_calibration(void) {
 	);
 }
 
-void screen_cmps12_angles(void) {
+void screen_cmps12_bearings(void) {
 //	printf(lcd_putch,"%03lu%c %02d%c   %02d%c", 
-	printf(lcd_putch,"%03.1lw%c %02d%c %02d%c", 
+//                    285.3d    291.3d
+//                    CMPS12d   BOSCHd
+//                    0123456789012345
+	printf(lcd_putch,"%03.1lw%c     %03lu%c", 
 		cmps12_get_int16(CMPS12_REG_BEARING_MSB), DEG_SYMBOL,
-		cmps12_get_int8(CMPS12_REG_PITCH), DEG_SYMBOL,
- 		cmps12_get_int8(CMPS12_REG_ROLL), DEG_SYMBOL
+		cmps12_get_int16(CMPS12_REG_BNO055_COMPASS_MSB) >> 4, DEG_SYMBOL
 	);
 //                    0123456789012345
 //                    345d 25d   89d
 	lcd_goto(LCD_LINE_TWO);
 
-	printf(lcd_putch,"RAW%c PITCH ROLL",DEG_SYMBOL);
+	printf(lcd_putch,"CMPS12%c   BOSCH%c",DEG_SYMBOL,DEG_SYMBOL);
+
+
+}
+
+
+
+void screen_cmps12_angles(void) { 
+
+	printf(lcd_putch,"%ld%c",cmps12_get_int16(CMPS12_REG_PITCH_ANGLE_MSB), DEG_SYMBOL
+	);
+
+	lcd_goto(11);
+	printf(lcd_putch,"%d%c",cmps12_get_int8(CMPS12_REG_ROLL), DEG_SYMBOL);
+
+
+//                    0123456789012345
+//                    345d 25d   89d
+	lcd_goto(LCD_LINE_TWO);
+
+	printf(lcd_putch,"PITCH       ROLL");
 
 
 }
@@ -882,7 +906,7 @@ short screen_cmps12_set_calibration(void) {
 
 
 #define MAX_SCREEN_RDLOGGER_BASIC     12
-#define ADDITIONAL_SCREENS_CMPS12     4
+#define ADDITIONAL_SCREENS_CMPS12     5
 void screen_select(void) {
 	static int8 screen;
 	static short has_buttons=0;
@@ -933,8 +957,9 @@ void screen_select(void) {
 			/* for CMPS12 equipped versions */
 			case 13: screen_cmps12_version_temperature(); has_buttons=0; break;
 			case 14: screen_cmps12_calibration(); has_buttons=0; break;
-			case 15: screen_cmps12_angles(); has_buttons=0; break;
-			case 16: has_buttons=screen_cmps12_set_calibration(); break;
+			case 15: screen_cmps12_bearings(); has_buttons=0; break;
+			case 16: screen_cmps12_angles(); has_buttons=0; break;
+			case 17: has_buttons=screen_cmps12_set_calibration(); break;
 		}
 
 }

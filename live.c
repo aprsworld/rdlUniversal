@@ -1,7 +1,7 @@
 
 
 void live_send(void) {
-	int8 buff[32];
+	int8 buff[64];
 	int8 buff_decimal[256]; /* to SD card and debugging */
 	int16 lCRC;
 	int8 i;
@@ -19,8 +19,60 @@ void live_send(void) {
 	current.pulse_count_live=0;
 	enable_interrupts(INT_TIMER2);
 
+	if ( LIVE_TYPE_CMPS12==current.live_type ) {
+		buff[0]='#';
+		buff[1]=current.serial_prefix;
+		buff[2]=current.serial_msb;
+		buff[3]=current.serial_lsb;
+		buff[4]=57; /* packet length */
+		buff[5]=37; /* packet type */
 
-	if ( LIVE_TYPE_FULL==current.live_type ) {
+		if ( ANEMOMETER_TYPE_THIES == current.anemometer_type ) {
+			/* scale Thies anemometer frequency to #40HC recipricol frequency */
+			l=anemometer_thies_to_40HC(pulse_period);
+			buff[6]=make8(l,1); /* wind speed */
+			buff[7]=make8(l,0);
+
+			l=anemometer_thies_to_40HC(pulse_min_period);
+			buff[8]=make8(l,1); /* wind gust */
+			buff[9]=make8(l,0);
+		} else {
+			buff[6]=make8(pulse_period,1); /* wind speed */
+			buff[7]=make8(pulse_period,0);
+			buff[8]=make8(pulse_min_period,1); /* wind gust */
+			buff[9]=make8(pulse_min_period,0); 
+		}
+		buff[10]=make8(pulse_count,1); /* wind pulse count */
+		buff[11]=make8(pulse_count,0); 
+
+		/* second anemometer not yet implemented */
+		buff[12]=buff[13]=buff[14]=buff[15]=buff[16]=buff[17]=0;
+
+
+
+		/* analog0 */
+		buff[18]=make8(current.analog0_adc,1);
+		buff[19]=make8(current.analog0_adc,0);
+
+		/* analog1 */
+		buff[20]=make8(current.analog1_adc,1);
+		buff[21]=make8(current.analog1_adc,0);
+
+		/* battery */
+		buff[22]=make8(current.input_voltage_adc,1);
+		buff[23]=make8(current.input_voltage_adc,0);
+
+		/* CMPS12 registers */
+		for ( i=0 ; i<31 ; i++ ) {
+			buff[24+i]=current.cmps12_register[i];
+		}
+
+		/* CRC */
+		lCRC=crc_chk(buff+1,54);
+		buff[55]=make8(lCRC,1);
+		buff[56]=make8(lCRC,0);
+
+	} else if ( LIVE_TYPE_FULL==current.live_type ) {
 /* 
 '#'             0  STX
 UNIT ID PREFIX  1  First character (A-Z) for serial number
@@ -170,11 +222,13 @@ CRC LSB         14 low byte of CRC
 		buff[14]=make8(lCRC,0);
 	}
 
+#if ! DEBUG_HUMAN_OUTPUT
 	/* send to wireless modem */
 	for ( i=0 ; i<buff[4] ; i++ ) {
 		/* xbee modem */
 		fputc(buff[i],stream_wireless);
-	}	
+	}
+#endif	
 
 	/* modem will automatically shut off when countdown done */
 
@@ -204,6 +258,16 @@ CRC LSB         14 low byte of CRC
 			fputc(buff_decimal[i],stream_sd);
 			delay_ms(1);
 		}
+
+#if DEBUG_HUMAN_OUTPUT
+	printf(stream_wireless,"%c%lu,",current.serial_prefix,make16(current.serial_msb,current.serial_lsb)); 
+
+		for ( i=0 ; i<strlen(buff_decimal) ; i++ ) {
+			fputc(buff_decimal[i],stream_wireless);
+		}
+#endif
+
+
 
 		if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source )  {
 			/* add the following columns after serial number if CMPS12 module is the wind direction source:
@@ -243,11 +307,21 @@ CRC LSB         14 low byte of CRC
 				delay_ms(1);
 			}
 
+#if DEBUG_HUMAN_OUTPUT
+			for ( i=0 ; i<strlen(buff_decimal) ; i++ ) {
+				fputc(buff_decimal[i],stream_wireless);
+			}
+#endif
+
+
 		}
 
 
 		/* terminate with new line */
 		fputc('\n',stream_sd);
+#if DEBUG_HUMAN_OUTPUT
+		fputc('\n',stream_wireless);
+#endif
 	}
 
 

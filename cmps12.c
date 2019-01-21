@@ -144,6 +144,8 @@ int8 cmps12_get_version() {
 	return cmps12_get_int8(CMPS12_REG_COMMAND_VERSION);
 }
 
+
+
 /* read all registers from the CMPS12 module and put into current.cmps12_register[] array */
 void cmps12_read_registers(void) {
 	int8 i;
@@ -165,7 +167,7 @@ void cmps12_read_registers(void) {
 	do {
 		i2c_start();
 	} while (1 == i2c_write(I2C_ADDR_CMPS12+1)); 
-
+	 
 	for ( i=0 ; i<0x1E  ; i++ ) {
 		/* ack */
 		current.cmps12_register[i]=i2c_read(1);
@@ -182,7 +184,10 @@ void cmps12_read_registers(void) {
 /* update current.wind_direction_sector and current.wind_direction_degrees */
 void cmps12_update_current(void) {
 	if ( WIND_DIRECTION_SOURCE_CMPS12 == current.wind_direction_source ) {
-		current.wind_direction_degrees = ( (cmps12_get_int16(CMPS12_REG_BEARING_MSB)+5) / 10) + current.wind_direction_offset;		
+		float f;
+		f=cmps12_get_int16(CMPS12_REG_BNO055_COMPASS_MSB) / 16 + 0.5;
+
+		current.wind_direction_degrees = f + current.wind_direction_offset;		
 
 		if ( current.wind_direction_degrees > 359 ) {
 			current.wind_direction_degrees -= 360;
