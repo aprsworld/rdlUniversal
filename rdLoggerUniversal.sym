@@ -767,7 +767,7 @@ Project Files:
     log.c                                                   [15-Jan-19 18:25  CRC=4674B83E]
     adc.c                                                   [15-Jan-19 18:25  CRC=A7DAD1EE]
     rtc.c                                                   [15-Jan-19 18:25  CRC=89A85F93]
-    cmps12.c                                                [29-Mar-19 12:37  CRC=CF8696C1]
+    cmps12.c                                                [29-Mar-19 12:49  CRC=CF8696C1]
     screens.c                                               [29-Mar-19 12:36  CRC=0CE71610]
     gps.c                                                   [15-Jan-19 18:25  CRC=BCB5F5D5]
     live.c                                                  [16-Jan-19 12:17  CRC=A8FC49DB]
