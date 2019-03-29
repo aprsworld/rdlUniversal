@@ -158,6 +158,16 @@ int16 crc_chk(int8 *data, int8 length) {
 	return reg_crc;
 }
 
+
+int16 read_eeprom_int16(int16 address) {
+	return make16(read_eeprom(address),read_eeprom(address+1));
+}
+void write_eeprom_int16(int16 address, int16 val) {
+	write_eeprom(address,make8(val,1));
+	write_eeprom(address+1,make8(val,0));
+}
+
+
 /* declare routine called by timer0 ISR */
 void task_10millisecond(void);
 
@@ -175,14 +185,6 @@ void task_10millisecond(void);
 #include "gps.c"
 #include "live.c"
 
-
-int16 read_eeprom_int16(int16 address) {
-	return make16(read_eeprom(address),read_eeprom(address+1));
-}
-void write_eeprom_int16(int16 address, int16 val) {
-	write_eeprom(address,make8(val,1));
-	write_eeprom(address+1,make8(val,0));
-}
 
 
 void basicInit() {
@@ -274,6 +276,7 @@ void basicInit() {
 	current.sd_log_rate=read_eeprom(EE_SD_LOG_RATE);
 	current.live_type=read_eeprom(EE_LIVE_TYPE);
 	current.wind_direction_source=read_eeprom(EE_WIND_DIRECTION_SOURCE);
+	current.wind_direction_offset=read_eeprom(EE_WIND_DIRECTION_OFFSET_MSB);
 
 	log.page_requested=65535;
 

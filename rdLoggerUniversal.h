@@ -21,14 +21,16 @@
 #use standard_io(F)
 
 /* location where serial number is stored */
-#define EE_SERIAL_PREFIX         0x10
-#define EE_SERIAL_MSB            0x11
-#define EE_SERIAL_LSB            0x12
-#define EE_HW_TYPE               0x13
-#define EE_ANEMOMETER_TYPE       0x14
-#define EE_SD_LOG_RATE           0x15
-#define EE_LIVE_TYPE             0x16
-#define EE_WIND_DIRECTION_SOURCE 0x17
+#define EE_SERIAL_PREFIX             0x10
+#define EE_SERIAL_MSB                0x11
+#define EE_SERIAL_LSB                0x12
+#define EE_HW_TYPE                   0x13
+#define EE_ANEMOMETER_TYPE           0x14
+#define EE_SD_LOG_RATE               0x15
+#define EE_LIVE_TYPE                 0x16
+#define EE_WIND_DIRECTION_SOURCE     0x17
+#define EE_WIND_DIRECTION_OFFSET_MSB 0x18
+#define EE_WIND_DIRECTION_OFFSET_LSB 0x19
 
 //#define ANEMOMETER_TIMEOUT 2000
 #define MODEM_TIMEOUT_SECONDS 240

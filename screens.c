@@ -904,9 +904,65 @@ short screen_cmps12_set_calibration(void) {
 	return got_buttons;
 }
 
+short screen_cmps12_set_direction_offset(void) {
+	static short got_buttons=0;
+	int16 now;
+
+	printf(lcd_putch,"CMPS12 North Set");
+//                    0123456789012345
+
+
+	if ( 0 == got_buttons ) {
+		if ( action.select_now ) {
+			/* set button pressed */
+			got_buttons=1;
+			action.select_now=0;
+			action.now_redraw=1;
+		} else {
+			/* prompt to set */
+			prompt_prev_set_next();
+		}
+	} 
+
+	if ( 1 == got_buttons ) {
+		lcd_goto(LCD_LINE_TWO);
+		printf(lcd_putch,"Set   Exit");
+//                        0123456789012345
+
+		if ( action.up_now ) {
+			action.up_now=0;
+			action.now_redraw=1;
+			got_buttons=0;
+		}
+		if ( action.down_now ) {
+			action.down_now=0;
+			action.now_redraw=1;
+
+			now = (cmps12_get_int16(CMPS12_REG_BNO055_COMPASS_MSB) / 16);
+
+			current.wind_direction_offset = 360 - now;
+			write_eeprom_int16(EE_WIND_DIRECTION_OFFSET_MSB,current.wind_direction_offset);
+
+	
+			lcd_goto(LCD_LINE_TWO);
+			printf(lcd_putch,"OFFSET IS %lu%c",current.wind_direction_offset,DEG_SYMBOL);
+//                            0123456789012345
+
+			delay_ms(500);
+			got_buttons=0;
+		}
+		if ( action.select_now ) {
+			action.select_now=0;
+			action.now_redraw=1;
+			got_buttons=0;
+		}
+	}
+
+	return got_buttons;
+}
 
 #define MAX_SCREEN_RDLOGGER_BASIC     12
-#define ADDITIONAL_SCREENS_CMPS12     5
+#define ADDITIONAL_SCREENS_CMPS12     6
 void screen_select(void) {
 	static int8 screen;
 	static short has_buttons=0;
@@ -960,6 +1016,7 @@ void screen_select(void) {
 			case 15: screen_cmps12_bearings(); has_buttons=0; break;
 			case 16: screen_cmps12_angles(); has_buttons=0; break;
 			case 17: has_buttons=screen_cmps12_set_calibration(); break;
+			case 18: has_buttons=screen_cmps12_set_direction_offset(); break;
 		}
 
 }
