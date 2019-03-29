@@ -276,7 +276,12 @@ void basicInit() {
 	current.sd_log_rate=read_eeprom(EE_SD_LOG_RATE);
 	current.live_type=read_eeprom(EE_LIVE_TYPE);
 	current.wind_direction_source=read_eeprom(EE_WIND_DIRECTION_SOURCE);
-	current.wind_direction_offset=read_eeprom(EE_WIND_DIRECTION_OFFSET_MSB);
+	current.wind_direction_offset=read_eeprom_int16(EE_WIND_DIRECTION_OFFSET_MSB);
+
+	if ( current.wind_direction_offset > 359 ) {
+		current.wind_direction_offset=0;
+		write_eeprom_int16(EE_WIND_DIRECTION_OFFSET_MSB,0);
+	}
 
 	log.page_requested=65535;
 

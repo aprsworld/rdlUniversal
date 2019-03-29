@@ -274,6 +274,7 @@ void screen_set_serial(short reset) {
 		write_eeprom(EE_ANEMOMETER_TYPE,ANEMOMETER_TYPE_40HC);
 		write_eeprom(EE_SD_LOG_RATE,SD_LOG_RATE_60);
 		write_eeprom(EE_WIND_DIRECTION_SOURCE, WIND_DIRECTION_SOURCE_ADC);
+		write_eeprom_int16(EE_WIND_DIRECTION_OFFSET_MSB,0);
 
 
 		lcd_clear();
@@ -848,6 +849,19 @@ void screen_cmps12_angles(void) {
 
 }
 
+void screen_wind_direction_offset(void) {
+	printf(lcd_putch,"%ld%c",current.wind_direction_offset, DEG_SYMBOL);
+
+
+//                    0123456789012345
+//                    345d 25d   89d
+	lcd_goto(LCD_LINE_TWO);
+
+	printf(lcd_putch,"WIND DIR OFFSET");
+
+
+}
+
 short screen_cmps12_set_calibration(void) {
 	static short got_buttons=0;
 
@@ -926,12 +940,22 @@ short screen_cmps12_set_direction_offset(void) {
 
 	if ( 1 == got_buttons ) {
 		lcd_goto(LCD_LINE_TWO);
-		printf(lcd_putch,"Set   Exit");
+		printf(lcd_putch,"Set   Exit Clear");
 //                        0123456789012345
 
 		if ( action.up_now ) {
 			action.up_now=0;
 			action.now_redraw=1;
+
+
+			current.wind_direction_offset=0;
+			write_eeprom_int16(EE_WIND_DIRECTION_OFFSET_MSB,0);
+
+			printf(lcd_putch,"OFFSET ZEROED");
+//                            0123456789012345
+
+			delay_ms(500);
+
 			got_buttons=0;
 		}
 		if ( action.down_now ) {
@@ -962,7 +986,7 @@ short screen_cmps12_set_direction_offset(void) {
 }
 
 #define MAX_SCREEN_RDLOGGER_BASIC     12
-#define ADDITIONAL_SCREENS_CMPS12     6
+#define ADDITIONAL_SCREENS_CMPS12     7
 void screen_select(void) {
 	static int8 screen;
 	static short has_buttons=0;
@@ -1015,8 +1039,9 @@ void screen_select(void) {
 			case 14: screen_cmps12_calibration(); has_buttons=0; break;
 			case 15: screen_cmps12_bearings(); has_buttons=0; break;
 			case 16: screen_cmps12_angles(); has_buttons=0; break;
-			case 17: has_buttons=screen_cmps12_set_calibration(); break;
-			case 18: has_buttons=screen_cmps12_set_direction_offset(); break;
+			case 17: screen_wind_direction_offset(); break;
+			case 18: has_buttons=screen_cmps12_set_calibration(); break;
+			case 19: has_buttons=screen_cmps12_set_direction_offset(); break;
 		}
 
 }
